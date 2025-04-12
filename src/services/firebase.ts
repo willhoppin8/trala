@@ -7,7 +7,7 @@ const firebaseConfig = {
   apiKey: "AIzaSyCKE2myj5Cdpme0BMvpeJSbeKKmEN51Vsw",
   authDomain: "puzzler-23312.firebaseapp.com",
   projectId: "puzzler-23312",
-  storageBucket: "puzzler-23312.appspot.com",
+  storageBucket: "puzzler-23312.firebasestorage.app",
   messagingSenderId: "662163993487",
   appId: "1:662163993487:web:238adfcd87fb112e8091fa",
   measurementId: "G-01ZC0J2GK6",
