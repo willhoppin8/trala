@@ -10,11 +10,19 @@ const PostingApp: React.FC = () => {
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [message, setMessage] = useState('');
+  const [likeAnimation, setLikeAnimation] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const formRef = useRef<HTMLFormElement>(null);
 
   useEffect(() => {
     // Subscribe to posts
     getPosts(setPosts);
+    
+    // Get stored username if available
+    const storedAuthor = localStorage.getItem('tralaAuthor');
+    if (storedAuthor) {
+      setAuthor(storedAuthor);
+    }
   }, []);
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -55,6 +63,9 @@ const PostingApp: React.FC = () => {
     setIsSubmitting(true);
     setMessage('');
 
+    // Remember author name for future use
+    localStorage.setItem('tralaAuthor', author.trim());
+
     // Upload image if one is selected
     let imageUrl = null;
     if (image) {
@@ -83,6 +94,14 @@ const PostingApp: React.FC = () => {
         fileInputRef.current.value = '';
       }
       setMessage('Your post has been published!');
+      
+      // Scroll to the top of the posts container
+      const postsContainer = document.querySelector('.posts-container');
+      if (postsContainer) {
+        setTimeout(() => {
+          postsContainer.scrollIntoView({ behavior: 'smooth' });
+        }, 500);
+      }
     } else {
       setMessage('There was an error publishing your post. Please try again.');
     }
@@ -91,7 +110,9 @@ const PostingApp: React.FC = () => {
   };
 
   const handleLike = async (postId: string) => {
+    setLikeAnimation(postId);
     await likePost(postId);
+    setTimeout(() => setLikeAnimation(null), 1000);
   };
 
   const handleDelete = async (postId: string) => {
@@ -100,45 +121,87 @@ const PostingApp: React.FC = () => {
     }
   };
 
+  // Format the date more nicely
+  const formatDate = (timestamp: number) => {
+    const date = new Date(timestamp);
+    const now = new Date();
+    const diffMs = now.getTime() - date.getTime();
+    const diffSecs = Math.round(diffMs / 1000);
+    const diffMins = Math.round(diffSecs / 60);
+    const diffHours = Math.round(diffMins / 60);
+    const diffDays = Math.round(diffHours / 24);
+
+    if (diffSecs < 60) {
+      return 'just now';
+    } else if (diffMins < 60) {
+      return `${diffMins} min${diffMins > 1 ? 's' : ''} ago`;
+    } else if (diffHours < 24) {
+      return `${diffHours} hour${diffHours > 1 ? 's' : ''} ago`;
+    } else if (diffDays < 7) {
+      return `${diffDays} day${diffDays > 1 ? 's' : ''} ago`;
+    } else {
+      return date.toLocaleDateString('en-US', { 
+        month: 'short', 
+        day: 'numeric',
+        year: date.getFullYear() !== now.getFullYear() ? 'numeric' : undefined 
+      });
+    }
+  };
+
   return (
     <div className="posting-app">
       <h2>TRALA</h2>
-      <p className="app-description">Share your thoughts with the world!</p>
+      <p className="app-description">Share your thoughts and images with the world!</p>
       
-      <form onSubmit={handleSubmit} className="post-form">
+      <form ref={formRef} onSubmit={handleSubmit} className="post-form">
         <div className="form-group">
-          <label htmlFor="author">Your Name</label>
+          <label htmlFor="author">
+            <span>Your Name</span>
+            <span className="emoji-icon">👤</span>
+          </label>
           <input
             type="text"
             id="author"
             value={author}
             onChange={(e) => setAuthor(e.target.value)}
             required
-            placeholder="Enter your name"
+            placeholder="What should we call you?"
           />
         </div>
 
         <div className="form-group">
-          <label htmlFor="content">Your Message</label>
+          <label htmlFor="content">
+            <span>Your Message</span>
+            <span className="emoji-icon">💬</span>
+          </label>
           <textarea
             id="content"
             value={content}
             onChange={(e) => setContent(e.target.value)}
             required
-            placeholder="What's on your mind?"
+            placeholder="What's on your mind today?"
             rows={4}
           />
         </div>
 
         <div className="form-group">
-          <label htmlFor="image">Image (Optional)</label>
-          <input
-            type="file"
-            id="image"
-            accept="image/*"
-            onChange={handleImageChange}
-            ref={fileInputRef}
-          />
+          <label htmlFor="image">
+            <span>Add an Image</span>
+            <span className="emoji-icon">🖼️</span>
+            <span className="optional-label">optional</span>
+          </label>
+          <div className="file-input-container">
+            <input
+              type="file"
+              id="image"
+              accept="image/*"
+              onChange={handleImageChange}
+              ref={fileInputRef}
+            />
+            {!imagePreview && (
+              <p className="file-helper">Drop an image here or click to browse</p>
+            )}
+          </div>
           
           {imagePreview && (
             <div className="image-preview-container">
@@ -147,32 +210,49 @@ const PostingApp: React.FC = () => {
                 type="button" 
                 className="clear-image-btn" 
                 onClick={handleClearImage}
+                aria-label="Remove image"
               >
-                Remove Image
+                ✕
               </button>
             </div>
           )}
         </div>
 
         <button type="submit" disabled={isSubmitting} className="post-button">
-          {isSubmitting ? 'Posting...' : 'Post Message'}
+          {isSubmitting ? (
+            <span className="button-content">
+              <span className="loader"></span>
+              <span>Posting...</span>
+            </span>
+          ) : (
+            <span className="button-content">
+              <span className="emoji-icon">✨</span>
+              <span>Share with the World</span>
+            </span>
+          )}
         </button>
 
         {message && <p className="message">{message}</p>}
       </form>
 
       <div className="posts-container">
-        <h3>Recent Posts</h3>
+        <h3>
+          <span className="emoji-icon">📝</span>
+          <span>Community Posts</span>
+        </h3>
         
         {posts.length === 0 ? (
-          <p className="no-posts">No posts yet. Be the first to post!</p>
+          <div className="no-posts-container">
+            <p className="no-posts">No posts yet. Be the first to post!</p>
+            <div className="arrow-down">↓</div>
+          </div>
         ) : (
           posts.map(post => (
             <div key={post.id} className="post">
               <div className="post-header">
                 <h4 className="post-author">{post.author}</h4>
                 <span className="post-date">
-                  {new Date(post.timestamp).toLocaleString()}
+                  {formatDate(post.timestamp)}
                 </span>
               </div>
               
@@ -187,21 +267,28 @@ const PostingApp: React.FC = () => {
               <div className="post-actions">
                 <button 
                   onClick={() => post.id && handleLike(post.id)}
-                  className="like-button"
+                  className={`like-button ${likeAnimation === post.id ? 'like-animation' : ''}`}
+                  aria-label="Like post"
                 >
-                  ❤️ {post.likes || 0}
+                  <span className="heart-icon">❤️</span> 
+                  <span className="like-count">{post.likes || 0}</span>
                 </button>
                 <button
                   onClick={() => post.id && handleDelete(post.id)}
                   className="delete-button"
+                  aria-label="Delete post"
                 >
-                  Delete
+                  <span>🗑️ Delete</span>
                 </button>
               </div>
             </div>
           ))
         )}
       </div>
+      
+      <footer className="app-footer">
+        <p>Made with <span className="heart-icon">❤️</span> TRALA © {new Date().getFullYear()}</p>
+      </footer>
     </div>
   );
 };
