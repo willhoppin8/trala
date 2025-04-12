@@ -37,3 +37,73 @@ main {
     font-size: 1rem;
   }
 }
+
+.app {
+  min-height: 100vh;
+  background-color: var(--background-color);
+}
+
+.app-header {
+  background-color: #000000;
+  padding: 30px 0;
+  text-align: center;
+  border-bottom: 1px solid var(--border-color);
+  position: relative;
+}
+
+.app-title {
+  color: var(--text-color);
+  font-size: 2.2rem;
+  font-weight: 800;
+  margin: 0;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.user-controls {
+  position: absolute;
+  top: 50%;
+  right: 30px;
+  transform: translateY(-50%);
+  display: flex;
+  align-items: center;
+  gap: 15px;
+}
+
+.welcome-message {
+  color: var(--text-color);
+  font-size: 0.95rem;
+  font-weight: 600;
+}
+
+.logout-button {
+  background-color: rgba(255, 255, 255, 0.1);
+  color: var(--text-color);
+  border: none;
+  border-radius: 20px;
+  padding: 8px 15px;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: var(--transition);
+}
+
+.logout-button:hover {
+  background-color: rgba(255, 255, 255, 0.2);
+}
+
+@media (max-width: 768px) {
+  .app-title {
+    font-size: 1.6rem;
+  }
+  
+  .user-controls {
+    position: static;
+    justify-content: center;
+    margin-top: 15px;
+    transform: none;
+  }
+  
+  .app-header {
+    padding: 20px 15px;
+  }
+}

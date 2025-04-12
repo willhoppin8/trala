@@ -1,5 +1,5 @@
 import { initializeApp } from 'firebase/app';
-import { getDatabase, ref, set, push, onValue, update, increment, remove, query, orderByChild } from 'firebase/database';
+import { getDatabase, ref, set, push, onValue, update, increment, remove, query, orderByChild, get, child } from 'firebase/database';
 import { getStorage, ref as storageRef, uploadBytes, getDownloadURL } from 'firebase/storage';
 
 // Firebase configuration
@@ -21,6 +21,8 @@ const storage = getStorage(app);
 
 // Reference to the posts collection
 const postsRef = ref(database, 'TRALA');
+// Reference to the users collection
+const usersRef = ref(database, 'users');
 
 // Post interface
 export interface Post {
@@ -40,6 +42,58 @@ export interface Comment {
   content: string;
   timestamp: number;
 }
+
+// User interface
+export interface User {
+  username: string;
+  password: string; // Note: In a real app, never store plaintext passwords!
+}
+
+// Register a new user
+export const registerUser = async (username: string, password: string): Promise<boolean> => {
+  try {
+    // Check if username already exists
+    const snapshot = await get(child(ref(database), `users/${username}`));
+    if (snapshot.exists()) {
+      console.error('Username already exists');
+      return false;
+    }
+    
+    // Create a new user
+    await set(ref(database, `users/${username}`), {
+      username,
+      password, // In a real app, use proper password hashing!
+    });
+    
+    return true;
+  } catch (error) {
+    console.error('Error registering user:', error);
+    return false;
+  }
+};
+
+// Login a user
+export const loginUser = async (username: string, password: string): Promise<boolean> => {
+  try {
+    const snapshot = await get(child(ref(database), `users/${username}`));
+    
+    if (!snapshot.exists()) {
+      console.error('User not found');
+      return false;
+    }
+    
+    const userData = snapshot.val();
+    if (userData.password === password) {
+      return true;
+    } else {
+      console.error('Incorrect password');
+      return false;
+    }
+  } catch (error) {
+    console.error('Error logging in:', error);
+    return false;
+  }
+};
 
 // Upload image to Firebase Storage
 export const uploadImage = async (file: File): Promise<string | null> => {
