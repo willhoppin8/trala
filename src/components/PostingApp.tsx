@@ -1,5 +1,19 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Post, Comment, addPost, getPosts, likePost, deletePost, uploadImage, addComment, deleteComment } from '../services/firebase';
+import { 
+  Post, 
+  Comment, 
+  User,
+  addPost, 
+  getPosts, 
+  likePost, 
+  deletePost, 
+  uploadImage, 
+  addComment, 
+  deleteComment,
+  cancelUser,
+  voteToUncancelUser,
+  getUsers
+} from '../services/firebase';
 import './PostingApp.css';
 
 interface PostingAppProps {
@@ -8,6 +22,7 @@ interface PostingAppProps {
 
 const PostingApp: React.FC<PostingAppProps> = ({ username }) => {
   const [posts, setPosts] = useState<Post[]>([]);
+  const [users, setUsers] = useState<{[key: string]: User}>({});
   const [content, setContent] = useState('');
   const [image, setImage] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
@@ -16,6 +31,7 @@ const PostingApp: React.FC<PostingAppProps> = ({ username }) => {
   const [likeAnimation, setLikeAnimation] = useState<string | null>(null);
   const [showComments, setShowComments] = useState<string | null>(null);
   const [commentText, setCommentText] = useState('');
+  const [confirmCancel, setConfirmCancel] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const formRef = useRef<HTMLFormElement>(null);
   const commentInputRef = useRef<HTMLInputElement>(null);
@@ -23,6 +39,15 @@ const PostingApp: React.FC<PostingAppProps> = ({ username }) => {
   useEffect(() => {
     // Subscribe to posts
     getPosts(setPosts);
+    
+    // Get all users with cancellation status
+    getUsers((usersList) => {
+      const usersMap: {[key: string]: User} = {};
+      usersList.forEach(user => {
+        usersMap[user.username] = user;
+      });
+      setUsers(usersMap);
+    });
   }, []);
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -144,6 +169,38 @@ const PostingApp: React.FC<PostingAppProps> = ({ username }) => {
       await deleteComment(postId, commentId);
     }
   };
+  
+  const handleCancelUser = async (userToCancel: string) => {
+    if (userToCancel === username) {
+      setMessage("You can't cancel yourself!");
+      setTimeout(() => setMessage(''), 3000);
+      return;
+    }
+
+    if (confirmCancel === userToCancel) {
+      const success = await cancelUser(userToCancel, username);
+      if (success) {
+        setMessage(`${userToCancel} has been cancelled!`);
+      } else {
+        setMessage(`Failed to cancel ${userToCancel}. Perhaps you already cancelled them?`);
+      }
+      setTimeout(() => setMessage(''), 3000);
+      setConfirmCancel(null);
+    } else {
+      setConfirmCancel(userToCancel);
+      setTimeout(() => setConfirmCancel(null), 3000); // Auto-clear confirmation after 3 seconds
+    }
+  };
+
+  const handleUncancelVote = async (userToUncancel: string) => {
+    const success = await voteToUncancelUser(userToUncancel, username);
+    if (success) {
+      setMessage(`You voted to uncancel ${userToUncancel}`);
+    } else {
+      setMessage(`Failed to vote for uncancelling ${userToUncancel}. Perhaps you already voted?`);
+    }
+    setTimeout(() => setMessage(''), 3000);
+  };
 
   // Format the date more nicely
   const formatDate = (timestamp: number) => {
@@ -170,6 +227,42 @@ const PostingApp: React.FC<PostingAppProps> = ({ username }) => {
         year: date.getFullYear() !== now.getFullYear() ? 'numeric' : undefined 
       });
     }
+  };
+
+  const renderCancellationStatus = (author: string) => {
+    const user = users[author];
+    if (!user) return null;
+    
+    if (user.isCancelled) {
+      return (
+        <div className="user-cancelled">
+          <span className="cancelled-badge">CANCELLED</span>
+          <button
+            className="uncancel-button small"
+            onClick={(e) => {
+              e.stopPropagation();
+              handleUncancelVote(author);
+            }}
+          >
+            Uncancel ({(user.uncancelVotes?.length || 0)}/3)
+          </button>
+        </div>
+      );
+    } else if (author !== username) {
+      return (
+        <button
+          className={`cancel-button small ${confirmCancel === author ? 'confirm' : ''}`}
+          onClick={(e) => {
+            e.stopPropagation();
+            handleCancelUser(author);
+          }}
+        >
+          {confirmCancel === author ? 'Confirm Cancel?' : 'Cancel'}
+        </button>
+      );
+    }
+    
+    return null;
   };
 
   return (
@@ -256,7 +349,10 @@ const PostingApp: React.FC<PostingAppProps> = ({ username }) => {
           posts.map(post => (
             <div key={post.id} className="post">
               <div className="post-header">
-                <h4 className="post-author">{post.author}</h4>
+                <div className="author-info">
+                  <h4 className="post-author">{post.author}</h4>
+                  {renderCancellationStatus(post.author)}
+                </div>
                 <span className="post-date">
                   {formatDate(post.timestamp)}
                 </span>
@@ -327,8 +423,11 @@ const PostingApp: React.FC<PostingAppProps> = ({ username }) => {
                     {post.comments && post.comments.length > 0 ? (
                       post.comments.map(comment => (
                         <div key={comment.id} className="comment">
-                          <div>
-                            <span className="comment-author">{comment.author}</span>
+                          <div className="comment-header">
+                            <div className="author-info">
+                              <span className="comment-author">{comment.author}</span>
+                              {renderCancellationStatus(comment.author)}
+                            </div>
                             <span className="comment-time">{formatDate(comment.timestamp)}</span>
                           </div>
                           <p className="comment-content">{comment.content}</p>

@@ -47,6 +47,10 @@ export interface Comment {
 export interface User {
   username: string;
   password: string; // Note: In a real app, never store plaintext passwords!
+  isCancelled?: boolean;
+  cancelVotes?: number;
+  cancelledBy?: string[];
+  uncancelVotes?: string[]; // Users who voted to uncancel
 }
 
 // Register a new user
@@ -215,4 +219,100 @@ export const deletePost = async (postId: string) => {
     console.error('Error deleting post:', error);
     return false;
   }
+};
+
+// Cancel a user
+export const cancelUser = async (username: string, cancelledBy: string): Promise<boolean> => {
+  try {
+    const userRef = ref(database, `users/${username}`);
+    const snapshot = await get(userRef);
+    
+    if (!snapshot.exists()) {
+      console.error('User not found');
+      return false;
+    }
+    
+    const userData = snapshot.val();
+    const cancelledBy_arr = userData.cancelledBy || [];
+    
+    // Check if this user already cancelled the target
+    if (cancelledBy_arr.includes(cancelledBy)) {
+      return false;
+    }
+    
+    await update(userRef, {
+      isCancelled: true,
+      cancelledBy: [...cancelledBy_arr, cancelledBy],
+      cancelVotes: (userData.cancelVotes || 0) + 1,
+      uncancelVotes: []
+    });
+    
+    return true;
+  } catch (error) {
+    console.error('Error cancelling user:', error);
+    return false;
+  }
+};
+
+// Vote to uncancel a user
+export const voteToUncancelUser = async (username: string, voterUsername: string): Promise<boolean> => {
+  try {
+    const userRef = ref(database, `users/${username}`);
+    const snapshot = await get(userRef);
+    
+    if (!snapshot.exists()) {
+      console.error('User not found');
+      return false;
+    }
+    
+    const userData = snapshot.val();
+    
+    // User must be cancelled to vote for uncancellation
+    if (!userData.isCancelled) {
+      return false;
+    }
+    
+    const uncancelVotes = userData.uncancelVotes || [];
+    
+    // Check if this user already voted
+    if (uncancelVotes.includes(voterUsername)) {
+      return false;
+    }
+    
+    const newUncancelVotes = [...uncancelVotes, voterUsername];
+    
+    // If 3 or more people vote to uncancel, remove the cancellation
+    if (newUncancelVotes.length >= 3) {
+      await update(userRef, {
+        isCancelled: false,
+        uncancelVotes: [],
+        cancelVotes: 0,
+        cancelledBy: []
+      });
+    } else {
+      await update(userRef, {
+        uncancelVotes: newUncancelVotes
+      });
+    }
+    
+    return true;
+  } catch (error) {
+    console.error('Error voting to uncancel user:', error);
+    return false;
+  }
+};
+
+// Get all users with cancellation status
+export const getUsers = (callback: (users: User[]) => void) => {
+  onValue(usersRef, (snapshot) => {
+    const users: User[] = [];
+    snapshot.forEach((childSnapshot) => {
+      const userData = childSnapshot.val();
+      users.push({
+        ...userData,
+        uncancelVotes: userData.uncancelVotes ? Object.values(userData.uncancelVotes) : []
+      });
+    });
+    callback(users);
+  });
 }; 

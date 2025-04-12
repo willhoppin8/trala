@@ -107,3 +107,15 @@ main {
     padding: 20px 15px;
   }
 }
+
+.app-content {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 30px 20px;
+}
+
+@media (max-width: 768px) {
+  .app-content {
+    padding: 20px 15px;
+  }
+}

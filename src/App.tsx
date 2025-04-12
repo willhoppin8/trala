@@ -37,7 +37,9 @@ const App: React.FC = () => {
       </header>
       
       {currentUser ? (
-        <PostingApp username={currentUser} />
+        <div className="app-content">
+          <PostingApp username={currentUser} />
+        </div>
       ) : (
         <LoginForm onLogin={handleLogin} />
       )}

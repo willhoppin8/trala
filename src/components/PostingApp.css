@@ -263,7 +263,7 @@ textarea {
 .post-header {
   display: flex;
   justify-content: space-between;
-  align-items: center;
+  align-items: flex-start;
   margin-bottom: 15px;
 }
 
@@ -602,15 +602,17 @@ input[type="file"] {
 }
 
 .comment {
-  padding: 12px 15px;
-  background-color: rgba(255, 255, 255, 0.03);
-  border-radius: 12px;
   position: relative;
+  background-color: rgba(255, 255, 255, 0.03);
+  padding: 15px;
+  border-radius: 12px;
+  margin-bottom: 15px;
+  border: 1px solid var(--border-color);
 }
 
 .comment-author {
   font-weight: 600;
-  font-size: 0.9rem;
+  color: var(--text-color);
   margin-right: 8px;
 }
 
@@ -719,4 +721,84 @@ h3 .emoji-icon {
   color: var(--secondary-text);
   font-style: italic;
   padding: 10px 0;
+}
+
+/* Author info and cancellation styling */
+.author-info {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.comment-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 8px;
+}
+
+.user-cancelled {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.cancelled-badge {
+  background-color: rgba(244, 63, 94, 0.9);
+  color: white;
+  font-size: 0.75rem;
+  font-weight: 700;
+  padding: 3px 6px;
+  border-radius: 4px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  animation: pulse 2s infinite;
+}
+
+.cancel-button.small, .uncancel-button.small {
+  border: none;
+  border-radius: 4px;
+  padding: 3px 8px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: var(--transition);
+}
+
+.cancel-button.small {
+  background-color: rgba(244, 63, 94, 0.1);
+  color: #f43f5e;
+}
+
+.cancel-button.small:hover {
+  background-color: rgba(244, 63, 94, 0.2);
+}
+
+.cancel-button.small.confirm {
+  background-color: #f43f5e;
+  color: white;
+  animation: pulse 1.5s infinite;
+}
+
+.uncancel-button.small {
+  background-color: rgba(56, 189, 248, 0.1);
+  color: var(--accent-color);
+  white-space: nowrap;
+}
+
+.uncancel-button.small:hover {
+  background-color: rgba(56, 189, 248, 0.2);
+}
+
+@keyframes pulse {
+  0% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.7;
+  }
+  100% {
+    opacity: 1;
+  }
 } 

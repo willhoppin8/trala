@@ -1,0 +1,174 @@
+.users-list-container {
+  background-color: var(--card-background);
+  padding: 30px;
+  border-radius: var(--border-radius);
+  box-shadow: var(--box-shadow);
+  transition: var(--transition);
+  position: relative;
+  z-index: 1;
+  overflow: hidden;
+  border: 1px solid var(--border-color);
+  margin-bottom: 40px;
+}
+
+.users-list-container::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 6px;
+  background: var(--primary-gradient);
+  z-index: 2;
+}
+
+.users-list-container h3 {
+  color: var(--text-color);
+  margin-bottom: 25px;
+  padding-bottom: 15px;
+  border-bottom: 2px solid var(--border-color);
+  font-weight: 700;
+  font-size: 1.6rem;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.user-message {
+  background-color: rgba(255, 255, 255, 0.05);
+  padding: 12px;
+  border-radius: 8px;
+  margin-bottom: 20px;
+  text-align: center;
+  color: var(--text-color);
+  font-weight: 500;
+  animation: fadeIn 0.3s ease-out;
+}
+
+.users-list {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.user-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 15px;
+  background-color: rgba(255, 255, 255, 0.02);
+  border-radius: 10px;
+  border: 1px solid var(--border-color);
+  transition: var(--transition);
+}
+
+.user-item:hover {
+  background-color: rgba(255, 255, 255, 0.05);
+}
+
+.user-item.cancelled {
+  background-color: rgba(244, 63, 94, 0.1);
+  border: 1px solid rgba(244, 63, 94, 0.2);
+}
+
+.user-info {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.username {
+  font-weight: 600;
+  font-size: 1.1rem;
+  color: var(--text-color);
+}
+
+.cancelled-badge {
+  background-color: rgba(244, 63, 94, 0.9);
+  color: white;
+  font-size: 0.8rem;
+  font-weight: 700;
+  padding: 4px 8px;
+  border-radius: 4px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  animation: pulse 2s infinite;
+}
+
+.uncancel-votes {
+  font-size: 0.85rem;
+  color: var(--secondary-text);
+  margin-left: 10px;
+}
+
+.user-actions {
+  display: flex;
+  gap: 10px;
+}
+
+.cancel-button, .uncancel-button {
+  border: none;
+  border-radius: 8px;
+  padding: 8px 14px;
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: var(--transition);
+}
+
+.cancel-button {
+  background-color: rgba(244, 63, 94, 0.1);
+  color: #f43f5e;
+}
+
+.cancel-button:hover {
+  background-color: rgba(244, 63, 94, 0.2);
+}
+
+.cancel-button.confirm {
+  background-color: #f43f5e;
+  color: white;
+  animation: pulse 1.5s infinite;
+}
+
+.uncancel-button {
+  background-color: rgba(56, 189, 248, 0.1);
+  color: var(--accent-color);
+}
+
+.uncancel-button:hover {
+  background-color: rgba(56, 189, 248, 0.2);
+}
+
+@keyframes pulse {
+  0% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.7;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+
+@media (max-width: 768px) {
+  .user-item {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 15px;
+  }
+  
+  .user-info {
+    flex-wrap: wrap;
+  }
+  
+  .user-actions {
+    align-self: stretch;
+  }
+  
+  .cancel-button, .uncancel-button {
+    flex: 1;
+    text-align: center;
+  }
+} 
