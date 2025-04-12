@@ -1,5 +1,6 @@
 import { initializeApp } from 'firebase/app';
 import { getDatabase, ref, set, push, onValue, update, increment, remove, query, orderByChild } from 'firebase/database';
+import { getStorage, ref as storageRef, uploadBytes, getDownloadURL } from 'firebase/storage';
 
 // Firebase configuration
 const firebaseConfig = {
@@ -16,9 +17,10 @@ const firebaseConfig = {
 // Initialize Firebase
 const app = initializeApp(firebaseConfig);
 const database = getDatabase(app);
+const storage = getStorage(app);
 
 // Reference to the posts collection
-const postsRef = ref(database, 'traleleroTralala');
+const postsRef = ref(database, 'TRALA');
 
 // Post interface
 export interface Post {
@@ -27,7 +29,23 @@ export interface Post {
   author: string;
   timestamp: number;
   likes?: number;
+  imageUrl?: string;
 }
+
+// Upload image to Firebase Storage
+export const uploadImage = async (file: File): Promise<string | null> => {
+  try {
+    const fileRef = storageRef(storage, `images/${Date.now()}_${file.name}`);
+    
+    await uploadBytes(fileRef, file);
+    const downloadUrl = await getDownloadURL(fileRef);
+    
+    return downloadUrl;
+  } catch (error) {
+    console.error('Error uploading image:', error);
+    return null;
+  }
+};
 
 // Add a new post
 export const addPost = async (post: Omit<Post, 'id' | 'likes'>) => {
@@ -65,7 +83,7 @@ export const getPosts = (callback: (posts: Post[]) => void) => {
 // Like a post
 export const likePost = async (postId: string) => {
   try {
-    const postRef = ref(database, `traleleroTralala/${postId}`);
+    const postRef = ref(database, `TRALA/${postId}`);
     await update(postRef, {
       likes: increment(1)
     });
@@ -79,7 +97,7 @@ export const likePost = async (postId: string) => {
 // Delete a post
 export const deletePost = async (postId: string) => {
   try {
-    const postRef = ref(database, `traleleroTralala/${postId}`);
+    const postRef = ref(database, `TRALA/${postId}`);
     await remove(postRef);
     return true;
   } catch (error) {
