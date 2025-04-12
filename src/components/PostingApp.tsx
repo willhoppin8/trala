@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Post, addPost, getPosts, likePost, deletePost, uploadImage } from '../services/firebase';
+import { Post, Comment, addPost, getPosts, likePost, deletePost, uploadImage, addComment, deleteComment } from '../services/firebase';
 import './PostingApp.css';
 
 const PostingApp: React.FC = () => {
@@ -11,8 +11,11 @@ const PostingApp: React.FC = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [message, setMessage] = useState('');
   const [likeAnimation, setLikeAnimation] = useState<string | null>(null);
+  const [showComments, setShowComments] = useState<string | null>(null);
+  const [commentText, setCommentText] = useState('');
   const fileInputRef = useRef<HTMLInputElement>(null);
   const formRef = useRef<HTMLFormElement>(null);
+  const commentInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     // Subscribe to posts
@@ -66,23 +69,24 @@ const PostingApp: React.FC = () => {
     // Remember author name for future use
     localStorage.setItem('tralaAuthor', author.trim());
 
-    // Upload image if one is selected
-    let imageUrl = null;
+    // Create the base post object
+    const newPost: Omit<Post, 'id' | 'likes' | 'comments'> = {
+      content: content.trim(),
+      author: author.trim(),
+      timestamp: Date.now()
+    };
+
+    // Upload image if one is selected and add to post object
     if (image) {
-      imageUrl = await uploadImage(image);
+      const imageUrl = await uploadImage(image);
       if (!imageUrl) {
         setMessage('Failed to upload image. Your post was not published.');
         setIsSubmitting(false);
         return;
       }
+      // Only add imageUrl if upload was successful
+      newPost.imageUrl = imageUrl;
     }
-
-    const newPost = {
-      content: content.trim(),
-      author: author.trim(),
-      timestamp: Date.now(),
-      imageUrl: imageUrl || undefined
-    };
 
     const postId = await addPost(newPost);
     
@@ -121,6 +125,37 @@ const PostingApp: React.FC = () => {
     }
   };
 
+  const toggleComments = (postId: string) => {
+    setShowComments(prevId => prevId === postId ? null : postId);
+    // Focus on comment input when comments are opened
+    if (showComments !== postId) {
+      setTimeout(() => {
+        commentInputRef.current?.focus();
+      }, 100);
+    }
+  };
+
+  const handleSubmitComment = async (postId: string, e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!commentText.trim() || !author.trim()) return;
+    
+    const newComment = {
+      author: author.trim(),
+      content: commentText.trim(),
+      timestamp: Date.now()
+    };
+    
+    await addComment(postId, newComment);
+    setCommentText('');
+  };
+
+  const handleDeleteComment = async (postId: string, commentId: string) => {
+    if (window.confirm('Are you sure you want to delete this comment?')) {
+      await deleteComment(postId, commentId);
+    }
+  };
+
   // Format the date more nicely
   const formatDate = (timestamp: number) => {
     const date = new Date(timestamp);
@@ -150,7 +185,6 @@ const PostingApp: React.FC = () => {
 
   return (
     <div className="posting-app">
-      <h2>TRALA</h2>
       <p className="app-description">Share your thoughts and images with the world!</p>
       
       <form ref={formRef} onSubmit={handleSubmit} className="post-form">
@@ -274,6 +308,18 @@ const PostingApp: React.FC = () => {
                   <span className="like-count">{post.likes || 0}</span>
                 </button>
                 <button
+                  onClick={() => post.id && toggleComments(post.id)}
+                  className="comment-button"
+                  aria-label="Show comments"
+                >
+                  <span>💬</span>
+                  <span>
+                    {post.comments && post.comments.length > 0 
+                      ? `${post.comments.length} comment${post.comments.length !== 1 ? 's' : ''}` 
+                      : 'Comment'}
+                  </span>
+                </button>
+                <button
                   onClick={() => post.id && handleDelete(post.id)}
                   className="delete-button"
                   aria-label="Delete post"
@@ -281,13 +327,61 @@ const PostingApp: React.FC = () => {
                   <span>🗑️ Delete</span>
                 </button>
               </div>
+
+              {showComments === post.id && post.id && (
+                <div className="comments-section">
+                  <div className="comments-header">
+                    <span className="emoji-icon">💬</span>
+                    <span>Comments</span>
+                  </div>
+
+                  <form onSubmit={(e) => post.id && handleSubmitComment(post.id, e)} className="comment-form">
+                    <input
+                      type="text"
+                      placeholder="Write a comment..."
+                      className="comment-input"
+                      value={commentText}
+                      onChange={(e) => setCommentText(e.target.value)}
+                      ref={commentInputRef}
+                    />
+                    <button type="submit" className="comment-submit">
+                      Post
+                    </button>
+                  </form>
+
+                  <div className="comment-list">
+                    {post.comments && post.comments.length > 0 ? (
+                      post.comments.map(comment => (
+                        <div key={comment.id} className="comment">
+                          <div>
+                            <span className="comment-author">{comment.author}</span>
+                            <span className="comment-time">{formatDate(comment.timestamp)}</span>
+                          </div>
+                          <p className="comment-content">{comment.content}</p>
+                          {comment.author === author && comment.id && (
+                            <button 
+                              className="delete-comment-btn" 
+                              onClick={() => post.id && comment.id && handleDeleteComment(post.id, comment.id)}
+                              aria-label="Delete comment"
+                            >
+                              🗑️
+                            </button>
+                          )}
+                        </div>
+                      ))
+                    ) : (
+                      <p className="no-comments">No comments yet. Be the first to add one!</p>
+                    )}
+                  </div>
+                </div>
+              )}
             </div>
           ))
         )}
       </div>
       
       <footer className="app-footer">
-        <p>Made with <span className="heart-icon">❤️</span> TRALA © {new Date().getFullYear()}</p>
+        <p>Made with <span className="heart-icon">❤️</span> © {new Date().getFullYear()}</p>
       </footer>
     </div>
   );
