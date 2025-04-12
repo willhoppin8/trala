@@ -119,3 +119,44 @@ main {
     padding: 20px 15px;
   }
 }
+
+.app-tabs {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 30px;
+  gap: 20px;
+}
+
+.app-tab {
+  background-color: var(--card-background);
+  border: 1px solid var(--border-color);
+  padding: 12px 30px;
+  border-radius: 30px;
+  color: var(--text-color);
+  font-size: 1.1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: var(--transition);
+}
+
+.app-tab:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+}
+
+.app-tab.active {
+  background: var(--primary-gradient);
+  border-color: transparent;
+  color: white;
+}
+
+@media (max-width: 768px) {
+  .app-tabs {
+    gap: 10px;
+  }
+  
+  .app-tab {
+    padding: 10px 20px;
+    font-size: 0.95rem;
+  }
+}

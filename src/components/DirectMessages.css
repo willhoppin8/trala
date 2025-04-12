@@ -1,0 +1,337 @@
+.dm-container {
+  display: flex;
+  background-color: var(--card-background);
+  border-radius: var(--border-radius);
+  overflow: hidden;
+  box-shadow: var(--box-shadow);
+  transition: var(--transition);
+  position: relative;
+  z-index: 1;
+  border: 1px solid var(--border-color);
+  height: 70vh;
+  min-height: 500px;
+  margin-bottom: 30px;
+}
+
+.dm-container::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 6px;
+  background: var(--primary-gradient);
+  z-index: 2;
+}
+
+.dm-sidebar {
+  width: 280px;
+  background-color: rgba(0, 0, 0, 0.2);
+  border-right: 1px solid var(--border-color);
+  display: flex;
+  flex-direction: column;
+}
+
+.dm-header {
+  padding: 15px;
+  border-bottom: 1px solid var(--border-color);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.dm-header h3 {
+  margin: 0;
+  font-size: 1.2rem;
+  color: var(--text-color);
+}
+
+.new-message-btn {
+  background-color: var(--accent-color);
+  color: white;
+  border: none;
+  border-radius: 4px;
+  padding: 8px 12px;
+  font-size: 0.8rem;
+  cursor: pointer;
+  transition: var(--transition);
+}
+
+.new-message-btn:hover {
+  transform: translateY(-2px);
+  filter: brightness(1.1);
+}
+
+.new-message-form {
+  padding: 15px;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.new-message-form select {
+  width: 100%;
+  padding: 8px;
+  background-color: var(--input-bg);
+  border: 1px solid var(--border-color);
+  color: var(--text-color);
+  border-radius: 4px;
+  margin-bottom: 10px;
+}
+
+.new-message-form button {
+  width: 100%;
+  padding: 8px;
+  background-color: var(--accent-color);
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.conversation-list {
+  flex-grow: 1;
+  overflow-y: auto;
+}
+
+.conversation-item {
+  padding: 15px;
+  display: flex;
+  cursor: pointer;
+  transition: var(--transition);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  position: relative;
+}
+
+.conversation-item:hover {
+  background-color: rgba(255, 255, 255, 0.05);
+}
+
+.conversation-item.active {
+  background-color: var(--hover-bg);
+}
+
+.conversation-item.active::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 4px;
+  height: 100%;
+  background: var(--primary-gradient);
+}
+
+.conversation-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: var(--primary-gradient);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-weight: 700;
+  margin-right: 15px;
+  font-size: 1.2rem;
+}
+
+.conversation-info {
+  flex-grow: 1;
+  overflow: hidden;
+}
+
+.conversation-name {
+  font-weight: 600;
+  margin-bottom: 5px;
+  color: var(--text-color);
+}
+
+.conversation-preview {
+  font-size: 0.85rem;
+  color: var(--secondary-text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 180px;
+}
+
+.conversation-time {
+  font-size: 0.75rem;
+  color: var(--secondary-text);
+  white-space: nowrap;
+  margin-left: 5px;
+}
+
+.dm-main {
+  flex-grow: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.dm-chat-header {
+  display: flex;
+  align-items: center;
+  padding: 15px;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.dm-chat-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: var(--primary-gradient);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-weight: 700;
+  margin-right: 15px;
+  font-size: 1.2rem;
+}
+
+.dm-chat-name {
+  font-weight: 600;
+  color: var(--text-color);
+  font-size: 1.1rem;
+}
+
+.dm-empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  color: var(--secondary-text);
+  padding: 20px;
+  text-align: center;
+}
+
+.dm-empty-icon {
+  font-size: 3rem;
+  margin-bottom: 15px;
+}
+
+.dm-empty-state h3 {
+  margin: 0 0 8px 0;
+  color: var(--text-color);
+}
+
+.dm-empty-state p {
+  margin: 0;
+  font-size: 0.9rem;
+}
+
+.dm-messages {
+  flex-grow: 1;
+  padding: 15px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+}
+
+.dm-message {
+  margin-bottom: 15px;
+  max-width: 70%;
+  display: flex;
+  flex-direction: column;
+}
+
+.dm-message.sent {
+  align-self: flex-end;
+}
+
+.dm-message.received {
+  align-self: flex-start;
+}
+
+.dm-message-content {
+  padding: 12px 15px;
+  border-radius: 18px;
+  font-size: 0.95rem;
+  line-height: 1.4;
+  position: relative;
+}
+
+.dm-message.sent .dm-message-content {
+  background-color: var(--accent-color);
+  color: white;
+  border-bottom-right-radius: 4px;
+}
+
+.dm-message.received .dm-message-content {
+  background-color: rgba(255, 255, 255, 0.1);
+  color: var(--text-color);
+  border-bottom-left-radius: 4px;
+}
+
+.dm-message-time {
+  font-size: 0.75rem;
+  color: var(--secondary-text);
+  margin-top: 4px;
+  align-self: flex-end;
+}
+
+.dm-message.received .dm-message-time {
+  align-self: flex-start;
+}
+
+.dm-input {
+  padding: 15px;
+  border-top: 1px solid var(--border-color);
+  display: flex;
+  gap: 10px;
+}
+
+.dm-input input {
+  flex-grow: 1;
+  padding: 12px 15px;
+  border-radius: 20px;
+  border: 1px solid var(--border-color);
+  background-color: var(--input-bg);
+  color: var(--text-color);
+  font-size: 0.95rem;
+}
+
+.dm-input input:focus {
+  outline: none;
+  border-color: var(--accent-color);
+}
+
+.dm-input button {
+  background-color: var(--accent-color);
+  color: white;
+  border: none;
+  border-radius: 20px;
+  padding: 0 20px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: var(--transition);
+}
+
+.dm-input button:hover {
+  filter: brightness(1.1);
+  transform: translateY(-2px);
+}
+
+.no-conversations {
+  text-align: center;
+  color: var(--secondary-text);
+  font-style: italic;
+  margin-top: 20px;
+}
+
+@media (max-width: 768px) {
+  .dm-container {
+    flex-direction: column;
+    height: auto;
+  }
+  
+  .dm-sidebar {
+    width: 100%;
+    height: 300px;
+    border-right: none;
+    border-bottom: 1px solid var(--border-color);
+  }
+  
+  .dm-main {
+    height: 450px;
+  }
+} 

@@ -23,6 +23,8 @@ const storage = getStorage(app);
 const postsRef = ref(database, 'TRALA');
 // Reference to the users collection
 const usersRef = ref(database, 'users');
+// Reference to the direct messages collection
+const dmsRef = ref(database, 'directMessages');
 
 // Post interface
 export interface Post {
@@ -51,6 +53,16 @@ export interface User {
   cancelVotes?: number;
   cancelledBy?: string[];
   uncancelVotes?: string[]; // Users who voted to uncancel
+}
+
+// Direct Message interface
+export interface DirectMessage {
+  id?: string;
+  sender: string;
+  recipient: string;
+  content: string;
+  timestamp: number;
+  read: boolean;
 }
 
 // Register a new user
@@ -315,4 +327,104 @@ export const getUsers = (callback: (users: User[]) => void) => {
     });
     callback(users);
   });
+};
+
+// Send a direct message
+export const sendDirectMessage = async (message: Omit<DirectMessage, 'id' | 'read'>) => {
+  try {
+    const conversationId = getConversationId(message.sender, message.recipient);
+    const messagesRef = ref(database, `directMessages/${conversationId}/messages`);
+    const newMessageRef = push(messagesRef);
+    
+    await set(newMessageRef, {
+      ...message,
+      read: false
+    });
+    
+    // Update conversation metadata
+    const conversationRef = ref(database, `directMessages/${conversationId}`);
+    await update(conversationRef, {
+      lastMessage: message.content,
+      lastMessageTime: message.timestamp,
+      participants: [message.sender, message.recipient]
+    });
+    
+    return newMessageRef.key;
+  } catch (error) {
+    console.error('Error sending direct message:', error);
+    return null;
+  }
+};
+
+// Get a conversation ID (always same for any two users regardless of who sends)
+export const getConversationId = (user1: string, user2: string) => {
+  return [user1, user2].sort().join('_');
+};
+
+// Get messages for a specific conversation
+export const getConversationMessages = (user1: string, user2: string, callback: (messages: DirectMessage[]) => void) => {
+  const conversationId = getConversationId(user1, user2);
+  const messagesRef = ref(database, `directMessages/${conversationId}/messages`);
+  
+  onValue(messagesRef, (snapshot) => {
+    const messages: DirectMessage[] = [];
+    snapshot.forEach((childSnapshot) => {
+      const message = childSnapshot.val();
+      messages.push({
+        id: childSnapshot.key,
+        ...message
+      });
+    });
+    
+    // Sort by timestamp
+    messages.sort((a, b) => a.timestamp - b.timestamp);
+    callback(messages);
+  });
+};
+
+// Get all conversations for a user
+export const getUserConversations = (username: string, callback: (conversations: any[]) => void) => {
+  const conversationsRef = ref(database, 'directMessages');
+  
+  onValue(conversationsRef, (snapshot) => {
+    const conversations: any[] = [];
+    snapshot.forEach((childSnapshot) => {
+      const convo = childSnapshot.val();
+      // Only include conversations where the user is a participant
+      if (convo.participants && convo.participants.includes(username)) {
+        const otherUser = convo.participants.find((p: string) => p !== username);
+        conversations.push({
+          id: childSnapshot.key,
+          otherUser,
+          lastMessage: convo.lastMessage,
+          lastMessageTime: convo.lastMessageTime
+        });
+      }
+    });
+    
+    // Sort by most recent message
+    conversations.sort((a, b) => b.lastMessageTime - a.lastMessageTime);
+    callback(conversations);
+  });
+};
+
+// Mark messages as read
+export const markMessagesAsRead = async (conversationId: string, username: string) => {
+  try {
+    const messagesRef = ref(database, `directMessages/${conversationId}/messages`);
+    const snapshot = await get(messagesRef);
+    
+    snapshot.forEach((childSnapshot) => {
+      const message = childSnapshot.val();
+      // Only mark messages from the other user as read
+      if (message.sender !== username && !message.read) {
+        update(child(messagesRef, childSnapshot.key!), { read: true });
+      }
+    });
+    
+    return true;
+  } catch (error) {
+    console.error('Error marking messages as read:', error);
+    return false;
+  }
 }; 

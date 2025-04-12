@@ -18,9 +18,10 @@ import './PostingApp.css';
 
 interface PostingAppProps {
   username: string;
+  startDMWithUser?: (username: string) => void;
 }
 
-const PostingApp: React.FC<PostingAppProps> = ({ username }) => {
+const PostingApp: React.FC<PostingAppProps> = ({ username, startDMWithUser }) => {
   const [posts, setPosts] = useState<Post[]>([]);
   const [users, setUsers] = useState<{[key: string]: User}>({});
   const [content, setContent] = useState('');
@@ -265,6 +266,14 @@ const PostingApp: React.FC<PostingAppProps> = ({ username }) => {
     return null;
   };
 
+  // Add function to handle starting DM from user click
+  const handleStartDM = (userToMessage: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (startDMWithUser && userToMessage !== username) {
+      startDMWithUser(userToMessage);
+    }
+  };
+
   return (
     <div className="posting-app">
       <form ref={formRef} onSubmit={handleSubmit} className="post-form">
@@ -296,9 +305,14 @@ const PostingApp: React.FC<PostingAppProps> = ({ username }) => {
               accept="image/*"
               onChange={handleImageChange}
               ref={fileInputRef}
+              className="hidden-file-input"
             />
+            <label htmlFor="image" className="custom-file-button">
+              <span className="button-icon">➕</span>
+              <span>Add Photo</span>
+            </label>
             {!imagePreview && (
-              <p className="file-helper">Drop an image here or click to browse</p>
+              <p className="file-helper">or drop an image here</p>
             )}
           </div>
           
@@ -350,7 +364,14 @@ const PostingApp: React.FC<PostingAppProps> = ({ username }) => {
             <div key={post.id} className="post">
               <div className="post-header">
                 <div className="author-info">
-                  <h4 className="post-author">{post.author}</h4>
+                  <h4 
+                    className={`post-author ${post.author !== username ? 'clickable' : ''}`}
+                    onClick={(e) => post.author !== username && handleStartDM(post.author, e)}
+                    title={post.author !== username ? `Message ${post.author}` : ''}
+                  >
+                    {post.author} 
+                    {post.author !== username && <span className="dm-icon">✉️</span>}
+                  </h4>
                   {renderCancellationStatus(post.author)}
                 </div>
                 <span className="post-date">
@@ -425,7 +446,14 @@ const PostingApp: React.FC<PostingAppProps> = ({ username }) => {
                         <div key={comment.id} className="comment">
                           <div className="comment-header">
                             <div className="author-info">
-                              <span className="comment-author">{comment.author}</span>
+                              <span 
+                                className={`comment-author ${comment.author !== username ? 'clickable' : ''}`}
+                                onClick={(e) => comment.author !== username && handleStartDM(comment.author, e)}
+                                title={comment.author !== username ? `Message ${comment.author}` : ''}
+                              >
+                                {comment.author}
+                                {comment.author !== username && <span className="dm-icon small">✉️</span>}
+                              </span>
                               {renderCancellationStatus(comment.author)}
                             </div>
                             <span className="comment-time">{formatDate(comment.timestamp)}</span>

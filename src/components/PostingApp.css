@@ -448,6 +448,10 @@ input[type="file"] {
   text-align: center;
   background-color: var(--input-bg);
   transition: var(--transition);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
 }
 
 .file-input-container:hover {
@@ -460,6 +464,46 @@ input[type="file"] {
   color: var(--secondary-text);
   font-size: 0.95rem;
   font-weight: 500;
+}
+
+/* Hide the default file input */
+.hidden-file-input {
+  width: 0.1px;
+  height: 0.1px;
+  opacity: 0;
+  overflow: hidden;
+  position: absolute;
+  z-index: -1;
+}
+
+/* Custom file input button styling */
+.custom-file-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  background-color: var(--accent-color);
+  color: white;
+  padding: 10px 24px;
+  border-radius: 30px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: var(--transition);
+  box-shadow: 0 4px 6px rgba(56, 189, 248, 0.2);
+}
+
+.custom-file-button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 12px rgba(56, 189, 248, 0.3);
+  filter: brightness(1.1);
+}
+
+.custom-file-button:active {
+  transform: translateY(0);
+}
+
+.button-icon {
+  font-size: 1.3rem;
 }
 
 /* Optional label styling */
@@ -801,4 +845,35 @@ h3 .emoji-icon {
   100% {
     opacity: 1;
   }
+}
+
+/* Direct message styling for usernames */
+.post-author.clickable,
+.comment-author.clickable {
+  cursor: pointer;
+  transition: var(--transition);
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.post-author.clickable:hover,
+.comment-author.clickable:hover {
+  color: var(--accent-color);
+}
+
+.dm-icon {
+  font-size: 0.8em;
+  opacity: 0.5;
+  transition: var(--transition);
+  display: inline-block;
+}
+
+.dm-icon.small {
+  font-size: 0.7em;
+}
+
+.post-author.clickable:hover .dm-icon,
+.comment-author.clickable:hover .dm-icon {
+  opacity: 1;
 } 
