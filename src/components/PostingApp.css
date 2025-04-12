@@ -876,4 +876,81 @@ h3 .emoji-icon {
 .post-author.clickable:hover .dm-icon,
 .comment-author.clickable:hover .dm-icon {
   opacity: 1;
+}
+
+/* Mentions styling */
+.mention {
+  font-weight: 700;
+  color: var(--accent-color);
+  transition: var(--transition);
+  display: inline-block;
+}
+
+.mention:hover {
+  text-decoration: underline;
+}
+
+.mention-hint {
+  font-size: 0.8rem;
+  color: var(--secondary-text);
+  margin-left: 8px;
+  font-weight: 500;
+  background-color: rgba(255, 255, 255, 0.05);
+  padding: 2px 8px;
+  border-radius: 10px;
+}
+
+.textarea-container, .comment-input-container {
+  position: relative;
+}
+
+.mentions-dropdown {
+  position: absolute;
+  background-color: var(--card-background);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  max-height: 200px;
+  overflow-y: auto;
+  z-index: 10;
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+  width: 250px;
+}
+
+.mentions-dropdown.comment-mentions {
+  top: 45px;
+  left: 0;
+}
+
+.mention-item {
+  display: flex;
+  align-items: center;
+  padding: 10px 15px;
+  gap: 10px;
+  cursor: pointer;
+  transition: var(--transition);
+}
+
+.mention-item:hover, .mention-item.selected {
+  background-color: var(--hover-bg);
+}
+
+.mention-avatar {
+  width: 30px;
+  height: 30px;
+  background: var(--primary-gradient);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  font-weight: 700;
+}
+
+.mention-username {
+  font-weight: 600;
+  color: var(--text-color);
+}
+
+.comment-form-container {
+  position: relative;
 } 

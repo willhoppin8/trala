@@ -12,7 +12,8 @@ import {
   deleteComment,
   cancelUser,
   voteToUncancelUser,
-  getUsers
+  getUsers,
+  sendDirectMessage
 } from '../services/firebase';
 import './PostingApp.css';
 
@@ -21,9 +22,16 @@ interface PostingAppProps {
   startDMWithUser?: (username: string) => void;
 }
 
+interface MentionData {
+  index: number;
+  query: string;
+  mentionCharIndex: number;
+}
+
 const PostingApp: React.FC<PostingAppProps> = ({ username, startDMWithUser }) => {
   const [posts, setPosts] = useState<Post[]>([]);
   const [users, setUsers] = useState<{[key: string]: User}>({});
+  const [usersList, setUsersList] = useState<string[]>([]);
   const [content, setContent] = useState('');
   const [image, setImage] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
@@ -33,23 +41,247 @@ const PostingApp: React.FC<PostingAppProps> = ({ username, startDMWithUser }) =>
   const [showComments, setShowComments] = useState<string | null>(null);
   const [commentText, setCommentText] = useState('');
   const [confirmCancel, setConfirmCancel] = useState<string | null>(null);
+  const [showMentions, setShowMentions] = useState(false);
+  const [mentionData, setMentionData] = useState<MentionData | null>(null);
+  const [filteredUsers, setFilteredUsers] = useState<string[]>([]);
+  const [showCommentMentions, setShowCommentMentions] = useState(false);
+  const [commentMentionData, setCommentMentionData] = useState<MentionData | null>(null);
+  const [selectedMention, setSelectedMention] = useState<number>(0);
+  
   const fileInputRef = useRef<HTMLInputElement>(null);
   const formRef = useRef<HTMLFormElement>(null);
   const commentInputRef = useRef<HTMLInputElement>(null);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const mentionsRef = useRef<HTMLDivElement>(null);
+  const commentMentionsRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     // Subscribe to posts
     getPosts(setPosts);
     
     // Get all users with cancellation status
-    getUsers((usersList) => {
+    getUsers((allUsers) => {
       const usersMap: {[key: string]: User} = {};
-      usersList.forEach(user => {
+      const usernamesList: string[] = [];
+      
+      allUsers.forEach(user => {
         usersMap[user.username] = user;
+        usernamesList.push(user.username);
       });
+      
       setUsers(usersMap);
+      setUsersList(usernamesList);
     });
   }, []);
+
+  // Close mentions dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (mentionsRef.current && !mentionsRef.current.contains(e.target as Node)) {
+        setShowMentions(false);
+      }
+      if (commentMentionsRef.current && !commentMentionsRef.current.contains(e.target as Node)) {
+        setShowCommentMentions(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
+
+  const handleContentChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    const newContent = e.target.value;
+    setContent(newContent);
+    
+    // Check for @ mentions
+    const lastAtSymbol = newContent.lastIndexOf('@');
+    if (lastAtSymbol !== -1) {
+      const textAfterAt = newContent.slice(lastAtSymbol + 1);
+      const spaceAfterAt = textAfterAt.indexOf(' ');
+      const mentionQuery = spaceAfterAt === -1 ? textAfterAt : textAfterAt.slice(0, spaceAfterAt);
+      
+      if (mentionQuery !== '' && lastAtSymbol === newContent.length - mentionQuery.length - 1) {
+        // Filter users based on query
+        const filtered = usersList.filter(
+          user => user.toLowerCase().includes(mentionQuery.toLowerCase()) && user !== username
+        );
+        
+        if (filtered.length > 0) {
+          setShowMentions(true);
+          setMentionData({
+            index: lastAtSymbol,
+            query: mentionQuery,
+            mentionCharIndex: lastAtSymbol
+          });
+          setFilteredUsers(filtered);
+          setSelectedMention(0);
+          return;
+        }
+      }
+    }
+    
+    setShowMentions(false);
+  };
+
+  const handleCommentChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const newComment = e.target.value;
+    setCommentText(newComment);
+    
+    // Check for @ mentions in comments
+    const lastAtSymbol = newComment.lastIndexOf('@');
+    if (lastAtSymbol !== -1) {
+      const textAfterAt = newComment.slice(lastAtSymbol + 1);
+      const spaceAfterAt = textAfterAt.indexOf(' ');
+      const mentionQuery = spaceAfterAt === -1 ? textAfterAt : textAfterAt.slice(0, spaceAfterAt);
+      
+      if (mentionQuery !== '' && lastAtSymbol === newComment.length - mentionQuery.length - 1) {
+        // Filter users based on query
+        const filtered = usersList.filter(
+          user => user.toLowerCase().includes(mentionQuery.toLowerCase()) && user !== username
+        );
+        
+        if (filtered.length > 0) {
+          setShowCommentMentions(true);
+          setCommentMentionData({
+            index: lastAtSymbol,
+            query: mentionQuery,
+            mentionCharIndex: lastAtSymbol
+          });
+          setFilteredUsers(filtered);
+          setSelectedMention(0);
+          return;
+        }
+      }
+    }
+    
+    setShowCommentMentions(false);
+  };
+
+  const handleSelectMention = (selectedUser: string, isComment: boolean = false) => {
+    if (isComment) {
+      if (commentMentionData) {
+        // Replace the @query with @username
+        const beforeMention = commentText.slice(0, commentMentionData.mentionCharIndex);
+        const afterMention = commentText.slice(
+          commentMentionData.mentionCharIndex + commentMentionData.query.length + 1
+        );
+        const newText = `${beforeMention}@${selectedUser} ${afterMention}`;
+        setCommentText(newText);
+        
+        // Focus back on input
+        if (commentInputRef.current) {
+          commentInputRef.current.focus();
+        }
+      }
+      setShowCommentMentions(false);
+    } else {
+      if (mentionData) {
+        // Replace the @query with @username
+        const beforeMention = content.slice(0, mentionData.mentionCharIndex);
+        const afterMention = content.slice(
+          mentionData.mentionCharIndex + mentionData.query.length + 1
+        );
+        const newText = `${beforeMention}@${selectedUser} ${afterMention}`;
+        setContent(newText);
+        
+        // Focus back on textarea
+        if (textareaRef.current) {
+          textareaRef.current.focus();
+        }
+      }
+      setShowMentions(false);
+    }
+  };
+
+  const handleMentionKeyDown = (e: React.KeyboardEvent, isComment: boolean = false) => {
+    // Only handle key events when mentions are shown
+    if (!(isComment ? showCommentMentions : showMentions)) return;
+    
+    switch (e.key) {
+      case 'ArrowDown':
+        e.preventDefault();
+        setSelectedMention(prev => (prev + 1) % filteredUsers.length);
+        break;
+      case 'ArrowUp':
+        e.preventDefault();
+        setSelectedMention(prev => (prev - 1 + filteredUsers.length) % filteredUsers.length);
+        break;
+      case 'Enter':
+        e.preventDefault();
+        if (filteredUsers.length > 0) {
+          handleSelectMention(filteredUsers[selectedMention], isComment);
+        }
+        break;
+      case 'Escape':
+        e.preventDefault();
+        isComment ? setShowCommentMentions(false) : setShowMentions(false);
+        break;
+    }
+  };
+
+  const formatTextWithMentions = (text: string) => {
+    if (!text.includes('@')) return text;
+    
+    // Split text by space to find words starting with @
+    const words = text.split(' ');
+    return words.map((word, i) => {
+      if (word.startsWith('@') && word.length > 1) {
+        const username = word.slice(1);
+        if (usersList.includes(username)) {
+          return (
+            <React.Fragment key={i}>
+              <span className="mention">@{username}</span>
+              {i < words.length - 1 ? ' ' : ''}
+            </React.Fragment>
+          );
+        }
+      }
+      return i < words.length - 1 ? `${word} ` : word;
+    });
+  };
+
+  const sendMentionNotifications = (text: string, sourceType: 'post' | 'comment', postContent?: string) => {
+    if (!text.includes('@')) return;
+    
+    // Find all mentions in the text using a simpler approach
+    const mentionRegex = /@(\w+)/g;
+    const mentions: string[] = [];
+    let match;
+    
+    // Use exec in a loop instead of matchAll
+    while ((match = mentionRegex.exec(text)) !== null) {
+      if (match[1]) {
+        mentions.push(match[1]);
+      }
+    }
+    
+    // Create a unique list without using Set
+    const uniqueMentions: string[] = [];
+    for (const mention of mentions) {
+      if (
+        !uniqueMentions.includes(mention) && 
+        mention !== username && 
+        usersList.includes(mention)
+      ) {
+        uniqueMentions.push(mention);
+      }
+    }
+    
+    uniqueMentions.forEach(async (mentionedUser) => {
+      const notificationMessage = sourceType === 'post' 
+        ? `${username} mentioned you in a post: "${text.substring(0, 100)}${text.length > 100 ? '...' : ''}"`
+        : `${username} mentioned you in a comment: "${text.substring(0, 100)}${text.length > 100 ? '...' : ''}" on post: "${postContent?.substring(0, 100) || ''}${postContent && postContent.length > 100 ? '...' : ''}"`;
+        
+      await sendDirectMessage({
+        sender: username,
+        recipient: mentionedUser,
+        content: notificationMessage,
+        timestamp: Date.now()
+      });
+    });
+  };
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
@@ -106,6 +338,9 @@ const PostingApp: React.FC<PostingAppProps> = ({ username, startDMWithUser }) =>
     const postId = await addPost(newPost);
     
     if (postId) {
+      // Send notifications to mentioned users
+      sendMentionNotifications(content.trim(), 'post');
+      
       setContent('');
       setImage(null);
       setImagePreview(null);
@@ -150,7 +385,7 @@ const PostingApp: React.FC<PostingAppProps> = ({ username, startDMWithUser }) =>
     }
   };
 
-  const handleSubmitComment = async (postId: string, e: React.FormEvent) => {
+  const handleSubmitComment = async (postId: string, e: React.FormEvent, postContent: string) => {
     e.preventDefault();
     
     if (!commentText.trim()) return;
@@ -162,6 +397,10 @@ const PostingApp: React.FC<PostingAppProps> = ({ username, startDMWithUser }) =>
     };
     
     await addComment(postId, newComment);
+    
+    // Send notifications to mentioned users
+    sendMentionNotifications(commentText.trim(), 'comment', postContent);
+    
     setCommentText('');
   };
 
@@ -281,15 +520,35 @@ const PostingApp: React.FC<PostingAppProps> = ({ username, startDMWithUser }) =>
           <label htmlFor="content">
             <span>Your Message</span>
             <span className="emoji-icon">💬</span>
+            <span className="mention-hint">Use @ to mention users</span>
           </label>
-          <textarea
-            id="content"
-            value={content}
-            onChange={(e) => setContent(e.target.value)}
-            required
-            placeholder="What's on your mind today?"
-            rows={4}
-          />
+          <div className="textarea-container">
+            <textarea
+              id="content"
+              value={content}
+              onChange={handleContentChange}
+              onKeyDown={(e) => handleMentionKeyDown(e)}
+              required
+              placeholder="What's on your mind today?"
+              rows={4}
+              ref={textareaRef}
+            />
+            
+            {showMentions && (
+              <div className="mentions-dropdown" ref={mentionsRef}>
+                {filteredUsers.map((user, index) => (
+                  <div 
+                    key={user} 
+                    className={`mention-item ${index === selectedMention ? 'selected' : ''}`}
+                    onClick={() => handleSelectMention(user)}
+                  >
+                    <span className="mention-avatar">{user.charAt(0).toUpperCase()}</span>
+                    <span className="mention-username">{user}</span>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
         </div>
 
         <div className="form-group">
@@ -379,7 +638,9 @@ const PostingApp: React.FC<PostingAppProps> = ({ username, startDMWithUser }) =>
                 </span>
               </div>
               
-              <p className="post-content">{post.content}</p>
+              <div className="post-content">
+                {formatTextWithMentions(post.content)}
+              </div>
               
               {post.imageUrl && (
                 <div className="post-image-container">
@@ -426,19 +687,39 @@ const PostingApp: React.FC<PostingAppProps> = ({ username, startDMWithUser }) =>
                     <span>Comments</span>
                   </div>
 
-                  <form onSubmit={(e) => post.id && handleSubmitComment(post.id, e)} className="comment-form">
-                    <input
-                      type="text"
-                      placeholder="Write a comment..."
-                      className="comment-input"
-                      value={commentText}
-                      onChange={(e) => setCommentText(e.target.value)}
-                      ref={commentInputRef}
-                    />
-                    <button type="submit" className="comment-submit">
-                      Post
-                    </button>
-                  </form>
+                  <div className="comment-form-container">
+                    <form onSubmit={(e) => post.id && handleSubmitComment(post.id, e, post.content)} className="comment-form">
+                      <div className="comment-input-container">
+                        <input
+                          type="text"
+                          placeholder="Write a comment... (Use @ to mention users)"
+                          className="comment-input"
+                          value={commentText}
+                          onChange={handleCommentChange}
+                          onKeyDown={(e) => handleMentionKeyDown(e, true)}
+                          ref={commentInputRef}
+                        />
+                        
+                        {showCommentMentions && (
+                          <div className="mentions-dropdown comment-mentions" ref={commentMentionsRef}>
+                            {filteredUsers.map((user, index) => (
+                              <div 
+                                key={user} 
+                                className={`mention-item ${index === selectedMention ? 'selected' : ''}`}
+                                onClick={() => handleSelectMention(user, true)}
+                              >
+                                <span className="mention-avatar">{user.charAt(0).toUpperCase()}</span>
+                                <span className="mention-username">{user}</span>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                      <button type="submit" className="comment-submit">
+                        Post
+                      </button>
+                    </form>
+                  </div>
 
                   <div className="comment-list">
                     {post.comments && post.comments.length > 0 ? (
@@ -458,7 +739,9 @@ const PostingApp: React.FC<PostingAppProps> = ({ username, startDMWithUser }) =>
                             </div>
                             <span className="comment-time">{formatDate(comment.timestamp)}</span>
                           </div>
-                          <p className="comment-content">{comment.content}</p>
+                          <div className="comment-content">
+                            {formatTextWithMentions(comment.content)}
+                          </div>
                           {comment.author === username && comment.id && (
                             <button 
                               className="delete-comment-btn" 
