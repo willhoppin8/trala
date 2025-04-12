@@ -184,206 +184,209 @@ const PostingApp: React.FC = () => {
   };
 
   return (
-    <div className="posting-app">
-      <p className="app-description">Share your thoughts and images with the world!</p>
-      
-      <form ref={formRef} onSubmit={handleSubmit} className="post-form">
-        <div className="form-group">
-          <label htmlFor="author">
-            <span>Your Name</span>
-            <span className="emoji-icon">👤</span>
-          </label>
-          <input
-            type="text"
-            id="author"
-            value={author}
-            onChange={(e) => setAuthor(e.target.value)}
-            required
-            placeholder="What should we call you?"
-          />
-        </div>
-
-        <div className="form-group">
-          <label htmlFor="content">
-            <span>Your Message</span>
-            <span className="emoji-icon">💬</span>
-          </label>
-          <textarea
-            id="content"
-            value={content}
-            onChange={(e) => setContent(e.target.value)}
-            required
-            placeholder="What's on your mind today?"
-            rows={4}
-          />
-        </div>
-
-        <div className="form-group">
-          <label htmlFor="image">
-            <span>Add an Image</span>
-            <span className="emoji-icon">🖼️</span>
-            <span className="optional-label">optional</span>
-          </label>
-          <div className="file-input-container">
+    <>
+      <header className="app-header">
+        <h1 className="app-title">SOCIAl MEDIsA APP TO CUREa ALL MALsADIES</h1>
+      </header>
+      <div className="posting-app">
+        <form ref={formRef} onSubmit={handleSubmit} className="post-form">
+          <div className="form-group">
+            <label htmlFor="author">
+              <span>Your Name</span>
+              <span className="emoji-icon">👤</span>
+            </label>
             <input
-              type="file"
-              id="image"
-              accept="image/*"
-              onChange={handleImageChange}
-              ref={fileInputRef}
+              type="text"
+              id="author"
+              value={author}
+              onChange={(e) => setAuthor(e.target.value)}
+              required
+              placeholder="What should we call you?"
             />
-            {!imagePreview && (
-              <p className="file-helper">Drop an image here or click to browse</p>
+          </div>
+
+          <div className="form-group">
+            <label htmlFor="content">
+              <span>Your Message</span>
+              <span className="emoji-icon">💬</span>
+            </label>
+            <textarea
+              id="content"
+              value={content}
+              onChange={(e) => setContent(e.target.value)}
+              required
+              placeholder="What's on your mind today?"
+              rows={4}
+            />
+          </div>
+
+          <div className="form-group">
+            <label htmlFor="image">
+              <span>Add an Image</span>
+              <span className="emoji-icon">🖼️</span>
+              <span className="optional-label">optional</span>
+            </label>
+            <div className="file-input-container">
+              <input
+                type="file"
+                id="image"
+                accept="image/*"
+                onChange={handleImageChange}
+                ref={fileInputRef}
+              />
+              {!imagePreview && (
+                <p className="file-helper">Drop an image here or click to browse</p>
+              )}
+            </div>
+            
+            {imagePreview && (
+              <div className="image-preview-container">
+                <img src={imagePreview} alt="Preview" className="image-preview" />
+                <button 
+                  type="button" 
+                  className="clear-image-btn" 
+                  onClick={handleClearImage}
+                  aria-label="Remove image"
+                >
+                  ✕
+                </button>
+              </div>
             )}
           </div>
+
+          <button type="submit" disabled={isSubmitting} className="post-button">
+            {isSubmitting ? (
+              <span className="button-content">
+                <span className="loader"></span>
+                <span>Posting...</span>
+              </span>
+            ) : (
+              <span className="button-content">
+                <span className="emoji-icon">✨</span>
+                <span>Share with the World</span>
+              </span>
+            )}
+          </button>
+
+          {message && <p className="message">{message}</p>}
+        </form>
+
+        <div className="posts-container">
+          <h3>
+            <span className="emoji-icon">📝</span>
+            <span>Community Posts</span>
+          </h3>
           
-          {imagePreview && (
-            <div className="image-preview-container">
-              <img src={imagePreview} alt="Preview" className="image-preview" />
-              <button 
-                type="button" 
-                className="clear-image-btn" 
-                onClick={handleClearImage}
-                aria-label="Remove image"
-              >
-                ✕
-              </button>
+          {posts.length === 0 ? (
+            <div className="no-posts-container">
+              <p className="no-posts">No posts yet. Be the first to post!</p>
+              <div className="arrow-down">↓</div>
             </div>
+          ) : (
+            posts.map(post => (
+              <div key={post.id} className="post">
+                <div className="post-header">
+                  <h4 className="post-author">{post.author}</h4>
+                  <span className="post-date">
+                    {formatDate(post.timestamp)}
+                  </span>
+                </div>
+                
+                <p className="post-content">{post.content}</p>
+                
+                {post.imageUrl && (
+                  <div className="post-image-container">
+                    <img src={post.imageUrl} alt="Post" className="post-image" />
+                  </div>
+                )}
+                
+                <div className="post-actions">
+                  <button 
+                    onClick={() => post.id && handleLike(post.id)}
+                    className={`like-button ${likeAnimation === post.id ? 'like-animation' : ''}`}
+                    aria-label="Like post"
+                  >
+                    <span className="heart-icon">❤️</span> 
+                    <span className="like-count">{post.likes || 0}</span>
+                  </button>
+                  <button
+                    onClick={() => post.id && toggleComments(post.id)}
+                    className="comment-button"
+                    aria-label="Show comments"
+                  >
+                    <span>💬</span>
+                    <span>
+                      {post.comments && post.comments.length > 0 
+                        ? `${post.comments.length} comment${post.comments.length !== 1 ? 's' : ''}` 
+                        : 'Comment'}
+                    </span>
+                  </button>
+                  <button
+                    onClick={() => post.id && handleDelete(post.id)}
+                    className="delete-button"
+                    aria-label="Delete post"
+                  >
+                    <span>🗑️ Delete</span>
+                  </button>
+                </div>
+
+                {showComments === post.id && post.id && (
+                  <div className="comments-section">
+                    <div className="comments-header">
+                      <span className="emoji-icon">💬</span>
+                      <span>Comments</span>
+                    </div>
+
+                    <form onSubmit={(e) => post.id && handleSubmitComment(post.id, e)} className="comment-form">
+                      <input
+                        type="text"
+                        placeholder="Write a comment..."
+                        className="comment-input"
+                        value={commentText}
+                        onChange={(e) => setCommentText(e.target.value)}
+                        ref={commentInputRef}
+                      />
+                      <button type="submit" className="comment-submit">
+                        Post
+                      </button>
+                    </form>
+
+                    <div className="comment-list">
+                      {post.comments && post.comments.length > 0 ? (
+                        post.comments.map(comment => (
+                          <div key={comment.id} className="comment">
+                            <div>
+                              <span className="comment-author">{comment.author}</span>
+                              <span className="comment-time">{formatDate(comment.timestamp)}</span>
+                            </div>
+                            <p className="comment-content">{comment.content}</p>
+                            {comment.author === author && comment.id && (
+                              <button 
+                                className="delete-comment-btn" 
+                                onClick={() => post.id && comment.id && handleDeleteComment(post.id, comment.id)}
+                                aria-label="Delete comment"
+                              >
+                                🗑️
+                              </button>
+                            )}
+                          </div>
+                        ))
+                      ) : (
+                        <p className="no-comments">No comments yet. Be the first to add one!</p>
+                      )}
+                    </div>
+                  </div>
+                )}
+              </div>
+            ))
           )}
         </div>
-
-        <button type="submit" disabled={isSubmitting} className="post-button">
-          {isSubmitting ? (
-            <span className="button-content">
-              <span className="loader"></span>
-              <span>Posting...</span>
-            </span>
-          ) : (
-            <span className="button-content">
-              <span className="emoji-icon">✨</span>
-              <span>Share with the World</span>
-            </span>
-          )}
-        </button>
-
-        {message && <p className="message">{message}</p>}
-      </form>
-
-      <div className="posts-container">
-        <h3>
-          <span className="emoji-icon">📝</span>
-          <span>Community Posts</span>
-        </h3>
         
-        {posts.length === 0 ? (
-          <div className="no-posts-container">
-            <p className="no-posts">No posts yet. Be the first to post!</p>
-            <div className="arrow-down">↓</div>
-          </div>
-        ) : (
-          posts.map(post => (
-            <div key={post.id} className="post">
-              <div className="post-header">
-                <h4 className="post-author">{post.author}</h4>
-                <span className="post-date">
-                  {formatDate(post.timestamp)}
-                </span>
-              </div>
-              
-              <p className="post-content">{post.content}</p>
-              
-              {post.imageUrl && (
-                <div className="post-image-container">
-                  <img src={post.imageUrl} alt="Post" className="post-image" />
-                </div>
-              )}
-              
-              <div className="post-actions">
-                <button 
-                  onClick={() => post.id && handleLike(post.id)}
-                  className={`like-button ${likeAnimation === post.id ? 'like-animation' : ''}`}
-                  aria-label="Like post"
-                >
-                  <span className="heart-icon">❤️</span> 
-                  <span className="like-count">{post.likes || 0}</span>
-                </button>
-                <button
-                  onClick={() => post.id && toggleComments(post.id)}
-                  className="comment-button"
-                  aria-label="Show comments"
-                >
-                  <span>💬</span>
-                  <span>
-                    {post.comments && post.comments.length > 0 
-                      ? `${post.comments.length} comment${post.comments.length !== 1 ? 's' : ''}` 
-                      : 'Comment'}
-                  </span>
-                </button>
-                <button
-                  onClick={() => post.id && handleDelete(post.id)}
-                  className="delete-button"
-                  aria-label="Delete post"
-                >
-                  <span>🗑️ Delete</span>
-                </button>
-              </div>
-
-              {showComments === post.id && post.id && (
-                <div className="comments-section">
-                  <div className="comments-header">
-                    <span className="emoji-icon">💬</span>
-                    <span>Comments</span>
-                  </div>
-
-                  <form onSubmit={(e) => post.id && handleSubmitComment(post.id, e)} className="comment-form">
-                    <input
-                      type="text"
-                      placeholder="Write a comment..."
-                      className="comment-input"
-                      value={commentText}
-                      onChange={(e) => setCommentText(e.target.value)}
-                      ref={commentInputRef}
-                    />
-                    <button type="submit" className="comment-submit">
-                      Post
-                    </button>
-                  </form>
-
-                  <div className="comment-list">
-                    {post.comments && post.comments.length > 0 ? (
-                      post.comments.map(comment => (
-                        <div key={comment.id} className="comment">
-                          <div>
-                            <span className="comment-author">{comment.author}</span>
-                            <span className="comment-time">{formatDate(comment.timestamp)}</span>
-                          </div>
-                          <p className="comment-content">{comment.content}</p>
-                          {comment.author === author && comment.id && (
-                            <button 
-                              className="delete-comment-btn" 
-                              onClick={() => post.id && comment.id && handleDeleteComment(post.id, comment.id)}
-                              aria-label="Delete comment"
-                            >
-                              🗑️
-                            </button>
-                          )}
-                        </div>
-                      ))
-                    ) : (
-                      <p className="no-comments">No comments yet. Be the first to add one!</p>
-                    )}
-                  </div>
-                </div>
-              )}
-            </div>
-          ))
-        )}
+        <footer className="app-footer">
+          <p>Made with <span className="heart-icon">❤️</span> © {new Date().getFullYear()}</p>
+        </footer>
       </div>
-      
-      <footer className="app-footer">
-        <p>Made with <span className="heart-icon">❤️</span> © {new Date().getFullYear()}</p>
-      </footer>
-    </div>
+    </>
   );
 };
 
