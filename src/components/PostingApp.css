@@ -953,4 +953,68 @@ h3 .emoji-icon {
 
 .comment-form-container {
   position: relative;
+}
+
+/* Godlike styling for 'will' username */
+.godlike-username {
+  font-weight: 700;
+  color: #ffd700;
+  text-shadow: 0 0 10px #ffcc00, 0 0 20px #ffbb00, 0 0 30px #ffaa00;
+  animation: godlike-pulse 2s infinite;
+  position: relative;
+  z-index: 1;
+}
+
+@keyframes godlike-pulse {
+  0% {
+    text-shadow: 0 0 10px #ffcc00, 0 0 20px #ffbb00, 0 0 30px #ffaa00;
+  }
+  50% {
+    text-shadow: 0 0 15px #ffcc00, 0 0 25px #ffbb00, 0 0 40px #ffaa00, 0 0 60px rgba(255, 215, 0, 0.7);
+  }
+  100% {
+    text-shadow: 0 0 10px #ffcc00, 0 0 20px #ffbb00, 0 0 30px #ffaa00;
+  }
+}
+
+.godlike-username::before {
+  content: "✨";
+  margin-right: 5px;
+}
+
+.godlike-username::after {
+  content: "✨";
+  margin-left: 5px;
+}
+
+/* Apology post styling */
+.apology-post {
+  border: 2px solid #f43f5e;
+  background-color: rgba(244, 63, 94, 0.05);
+}
+
+.apology-post::before {
+  background: linear-gradient(to right, #f43f5e, #ff7e5f) !important;
+  opacity: 1 !important;
+  width: 6px !important;
+}
+
+.apology-post-content {
+  position: relative;
+  padding-top: 25px;
+}
+
+.apology-label {
+  position: absolute;
+  top: -10px;
+  left: 15px;
+  background-color: #f43f5e;
+  color: white;
+  font-size: 0.75rem;
+  font-weight: 700;
+  padding: 3px 10px;
+  border-radius: 20px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  animation: pulse 2s infinite;
 } 

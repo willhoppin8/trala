@@ -35,6 +35,7 @@ export interface Post {
   likes?: number;
   imageUrl?: string;
   comments?: Comment[];
+  isApology?: boolean;
 }
 
 // Comment interface
@@ -53,6 +54,7 @@ export interface User {
   cancelVotes?: number;
   cancelledBy?: string[];
   uncancelVotes?: string[]; // Users who voted to uncancel
+  lastApology?: number; // Timestamp of the last apology
 }
 
 // Direct Message interface
@@ -252,12 +254,24 @@ export const cancelUser = async (username: string, cancelledBy: string): Promise
       return false;
     }
     
-    await update(userRef, {
-      isCancelled: true,
-      cancelledBy: [...cancelledBy_arr, cancelledBy],
-      cancelVotes: (userData.cancelVotes || 0) + 1,
-      uncancelVotes: []
-    });
+    const newCancelledBy = [...cancelledBy_arr, cancelledBy];
+    const newCancelVotes = (userData.cancelVotes || 0) + 1;
+    
+    // If 3 or more people vote to cancel, activate the cancellation
+    if (newCancelledBy.length >= 3) {
+      await update(userRef, {
+        isCancelled: true,
+        cancelledBy: newCancelledBy,
+        cancelVotes: newCancelVotes,
+        uncancelVotes: []
+      });
+    } else {
+      // Otherwise just record the vote
+      await update(userRef, {
+        cancelledBy: newCancelledBy,
+        cancelVotes: newCancelVotes
+      });
+    }
     
     return true;
   } catch (error) {
@@ -426,5 +440,62 @@ export const markMessagesAsRead = async (conversationId: string, username: strin
   } catch (error) {
     console.error('Error marking messages as read:', error);
     return false;
+  }
+};
+
+// Make an apology post
+export const makeApology = async (username: string): Promise<boolean> => {
+  try {
+    // Create an apology post
+    const apologyPost: Omit<Post, 'id' | 'likes' | 'comments'> = {
+      content: `${username} is sooo so sorry! ${username} did a bad thing! ${username} will be better! ${username} is sorry!`,
+      author: username,
+      timestamp: Date.now(),
+      isApology: true
+    };
+    
+    // Add the apology post
+    await addPost(apologyPost);
+    
+    // Update user's cancellation status (forgiven but still flagged)
+    await updateUserCancellationStatus(username);
+    
+    return true;
+  } catch (error) {
+    console.error('Error posting apology:', error);
+    return false;
+  }
+};
+
+// Update user's cancellation status after apology
+export const updateUserCancellationStatus = async (username: string): Promise<void> => {
+  try {
+    const userRef = ref(database, `users/${username}`);
+    const snapshot = await get(userRef);
+    
+    if (snapshot.exists()) {
+      await update(userRef, {
+        lastApology: Date.now()
+      });
+    }
+  } catch (error) {
+    console.error('Error updating user status:', error);
+  }
+};
+
+// Get user status (for checking cancellation)
+export const getUserStatus = async (username: string): Promise<User | null> => {
+  try {
+    const userRef = ref(database, `users/${username}`);
+    const snapshot = await get(userRef);
+    
+    if (snapshot.exists()) {
+      return snapshot.val() as User;
+    }
+    
+    return null;
+  } catch (error) {
+    console.error('Error getting user status:', error);
+    return null;
   }
 }; 

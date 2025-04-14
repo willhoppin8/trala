@@ -230,9 +230,10 @@ const PostingApp: React.FC<PostingAppProps> = ({ username, startDMWithUser }) =>
       if (word.startsWith('@') && word.length > 1) {
         const username = word.slice(1);
         if (usersList.includes(username)) {
+          const isGodlike = username.toLowerCase() === 'will';
           return (
             <React.Fragment key={i}>
-              <span className="mention">@{username}</span>
+              <span className={`mention ${isGodlike ? 'godlike-username' : ''}`}>@{username}</span>
               {i < words.length - 1 ? ' ' : ''}
             </React.Fragment>
           );
@@ -420,9 +421,15 @@ const PostingApp: React.FC<PostingAppProps> = ({ username, startDMWithUser }) =>
     if (confirmCancel === userToCancel) {
       const success = await cancelUser(userToCancel, username);
       if (success) {
-        setMessage(`${userToCancel} has been cancelled!`);
+        const user = users[userToCancel];
+        // Check if the user is now cancelled or just voted for cancellation
+        if (user && user.cancelVotes && user.cancelVotes >= 3) {
+          setMessage(`${userToCancel} has been cancelled! (3/3 votes reached)`);
+        } else {
+          setMessage(`You voted to cancel ${userToCancel}. ${user?.cancelVotes || 1}/3 votes so far.`);
+        }
       } else {
-        setMessage(`Failed to cancel ${userToCancel}. Perhaps you already cancelled them?`);
+        setMessage(`Failed to cancel ${userToCancel}. Perhaps you already voted?`);
       }
       setTimeout(() => setMessage(''), 3000);
       setConfirmCancel(null);
@@ -489,6 +496,9 @@ const PostingApp: React.FC<PostingAppProps> = ({ username, startDMWithUser }) =>
         </div>
       );
     } else if (author !== username) {
+      // Check if user has any cancel votes
+      const hasCancelVotes = user.cancelVotes && user.cancelVotes > 0;
+      
       return (
         <button
           className={`cancel-button small ${confirmCancel === author ? 'confirm' : ''}`}
@@ -497,7 +507,7 @@ const PostingApp: React.FC<PostingAppProps> = ({ username, startDMWithUser }) =>
             handleCancelUser(author);
           }}
         >
-          {confirmCancel === author ? 'Confirm Cancel?' : 'Cancel'}
+          {confirmCancel === author ? 'Confirm Cancel?' : hasCancelVotes ? `Cancel (${user.cancelVotes}/3)` : 'Cancel'}
         </button>
       );
     }
@@ -620,18 +630,18 @@ const PostingApp: React.FC<PostingAppProps> = ({ username, startDMWithUser }) =>
           </div>
         ) : (
           posts.map(post => (
-            <div key={post.id} className="post">
+            <div key={post.id} className={`post ${post.isApology ? 'apology-post' : ''}`}>
               <div className="post-header">
                 <div className="author-info">
                   <h4 
-                    className={`post-author ${post.author !== username ? 'clickable' : ''}`}
+                    className={`post-author ${post.author !== username ? 'clickable' : ''} ${post.author.toLowerCase() === 'will' ? 'godlike-username' : ''}`}
                     onClick={(e) => post.author !== username && handleStartDM(post.author, e)}
                     title={post.author !== username ? `Message ${post.author}` : ''}
                   >
                     {post.author} 
                     {post.author !== username && <span className="dm-icon">✉️</span>}
                   </h4>
-                  {renderCancellationStatus(post.author)}
+                  {!post.isApology && renderCancellationStatus(post.author)}
                 </div>
                 <span className="post-date">
                   {formatDate(post.timestamp)}
@@ -639,7 +649,14 @@ const PostingApp: React.FC<PostingAppProps> = ({ username, startDMWithUser }) =>
               </div>
               
               <div className="post-content">
-                {formatTextWithMentions(post.content)}
+                {post.isApology ? (
+                  <div className="apology-post-content">
+                    <span className="apology-label">OFFICIAL APOLOGY</span>
+                    {formatTextWithMentions(post.content)}
+                  </div>
+                ) : (
+                  formatTextWithMentions(post.content)
+                )}
               </div>
               
               {post.imageUrl && (
@@ -669,7 +686,7 @@ const PostingApp: React.FC<PostingAppProps> = ({ username, startDMWithUser }) =>
                       : 'Comment'}
                   </span>
                 </button>
-                {post.author === username && (
+                {post.author === username && !post.isApology && (
                   <button
                     onClick={() => post.id && handleDelete(post.id)}
                     className="delete-button"
@@ -728,7 +745,7 @@ const PostingApp: React.FC<PostingAppProps> = ({ username, startDMWithUser }) =>
                           <div className="comment-header">
                             <div className="author-info">
                               <span 
-                                className={`comment-author ${comment.author !== username ? 'clickable' : ''}`}
+                                className={`comment-author ${comment.author !== username ? 'clickable' : ''} ${comment.author.toLowerCase() === 'will' ? 'godlike-username' : ''}`}
                                 onClick={(e) => comment.author !== username && handleStartDM(comment.author, e)}
                                 title={comment.author !== username ? `Message ${comment.author}` : ''}
                               >
