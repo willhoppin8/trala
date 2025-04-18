@@ -1488,4 +1488,37 @@ h3 .emoji-icon {
   .user-vote-indicator {
     right: 10px;
   }
+}
+
+.fact-check-badge {
+  display: inline-flex;
+  align-items: center;
+  background-color: #ffe4e4;
+  color: #d32f2f;
+  font-size: 0.75rem;
+  font-weight: 600;
+  padding: 3px 6px;
+  border-radius: 4px;
+  margin-left: 8px;
+  cursor: pointer;
+  border: 1px solid #d32f2f;
+  transition: background-color 0.2s ease;
+  white-space: nowrap;
+}
+
+.fact-check-badge:hover {
+  background-color: #ffcbcb;
+}
+
+.fact-check-badge.small {
+  font-size: 0.65rem;
+  padding: 2px 4px;
+}
+
+/* Add styles for fact checker in mentions */
+.mention + .fact-check-badge {
+  margin-left: 4px;
+  vertical-align: middle;
+  display: inline-flex;
+  font-size: 0.65rem;
 } 

@@ -248,6 +248,7 @@ const PostingApp: React.FC<PostingAppProps> = ({ username, startDMWithUser, user
           const isGodlike = username.toLowerCase() === 'will';
           const isSophia = username === 'SophiaAnnabelle';
           const isKiki = username.toLowerCase() === 'kikiwiki';
+          const isWillImpersonator = username.toLowerCase().includes('will') && username.toLowerCase() !== 'will';
           
           let className = "mention";
           if (isGodlike) className += " godlike-username";
@@ -257,6 +258,7 @@ const PostingApp: React.FC<PostingAppProps> = ({ username, startDMWithUser, user
           return (
             <React.Fragment key={i}>
               <span className={className}>@{username}</span>
+              {isWillImpersonator && <span className="fact-check-badge" onClick={() => window.open('https://www.nyc.gov/site/nypd/index.page', '_blank')}>⚠️ Fact check: Not the real Will - Report</span>}
               {i < words.length - 1 ? ' ' : ''}
             </React.Fragment>
           );
@@ -936,6 +938,11 @@ const PostingApp: React.FC<PostingAppProps> = ({ username, startDMWithUser, user
                     {post.author} 
                     {post.author !== username && <span className="dm-icon">✉️</span>}
                   </h4>
+                  {post.author.toLowerCase().includes('will') && post.author.toLowerCase() !== 'will' && (
+                    <span className="fact-check-badge" onClick={() => window.open('https://www.nyc.gov/site/nypd/index.page', '_blank')}>
+                      ⚠️ Fact check: Not the real Will - Report
+                    </span>
+                  )}
                   {!post.isApology && renderCancellationStatus(post.author)}
                 </div>
                 <span className="post-date">
@@ -1133,6 +1140,11 @@ const PostingApp: React.FC<PostingAppProps> = ({ username, startDMWithUser, user
                                 {comment.author}
                                 {comment.author !== username && <span className="dm-icon small">✉️</span>}
                               </span>
+                              {comment.author.toLowerCase().includes('will') && comment.author.toLowerCase() !== 'will' && (
+                                <span className="fact-check-badge small" onClick={() => window.open('https://www.nyc.gov/site/nypd/index.page', '_blank')}>
+                                  ⚠️ Not the real Will - Report
+                                </span>
+                              )}
                               {renderCancellationStatus(comment.author)}
                             </div>
                             <span className="comment-time">{formatDate(comment.timestamp)}</span>
