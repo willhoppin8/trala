@@ -924,12 +924,13 @@ export const getUnreadMessageCount = async (
     const counts = { direct: 0, group: 0 };
     
     // Check direct messages
-    const dmsSnapshot = await get(dmsRef);
+    const dmsSnapshot = await get(ref(database, 'directMessages'));
     dmsSnapshot.forEach((convoSnapshot) => {
       const convo = convoSnapshot.val();
       if (convo.participants && convo.participants.includes(username) && convo.messages) {
         Object.values(convo.messages).forEach((msg: any) => {
-          if (msg.recipient === username && !msg.read) {
+          // Only count messages where this user is the recipient and they haven't read it
+          if (msg.recipient === username && msg.read === false) {
             counts.direct++;
           }
         });
@@ -937,7 +938,7 @@ export const getUnreadMessageCount = async (
     });
     
     // Check group messages
-    const groupsSnapshot = await get(groupChatsRef);
+    const groupsSnapshot = await get(ref(database, 'groupChats'));
     groupsSnapshot.forEach((groupSnapshot) => {
       const groupData = groupSnapshot.val();
       // Check if the group has messages

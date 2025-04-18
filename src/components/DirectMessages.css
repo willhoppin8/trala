@@ -282,6 +282,8 @@
   background-color: var(--input-bg);
   color: var(--text-color);
   font-size: 0.95rem;
+  -webkit-appearance: none;
+  appearance: none;
 }
 
 .dm-input button {
@@ -293,6 +295,8 @@
   font-weight: 600;
   cursor: pointer;
   transition: var(--transition);
+  -webkit-appearance: none;
+  appearance: none;
 }
 
 .dm-input button:hover {
@@ -383,8 +387,9 @@
   
   .mobile-view .dm-messages {
     flex: 1;
-    height: calc(100vh - 120px); /* Account for header and input */
+    height: calc(100vh - 120px - env(safe-area-inset-bottom, 0px));
     overflow-y: auto;
+    padding-bottom: 15px;
   }
   
   /* Make sure the input stays at the bottom */
@@ -392,6 +397,21 @@
     position: sticky;
     bottom: 0;
     background-color: var(--card-background);
+    padding-bottom: env(safe-area-inset-bottom, 10px);
+    z-index: 10;
+  }
+  
+  /* Fix for iOS keyboard issues */
+  @supports (-webkit-touch-callout: none) {
+    /* iOS specific styles */
+    .mobile-view .dm-input {
+      position: sticky;
+      bottom: 0;
+    }
+    
+    .mobile-view .dm-input input {
+      font-size: 16px;
+    }
   }
   
   .dm-message {

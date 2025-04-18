@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import './App.css';
 import PostingApp from './components/PostingApp';
 import LoginForm from './components/LoginForm';
@@ -6,7 +6,13 @@ import DirectMessages from './components/DirectMessages';
 import ApologyScreen from './components/ApologyScreen';
 import UserProfile from './components/UserProfile';
 import ProfilePicture from './components/ProfilePicture';
-import { getUserStatus, getUserProfile } from './services/firebase';
+import {
+  getUserStatus,
+  User,
+  updateUserCancellationStatus,
+  getUnreadMessageCount,
+  getUserProfile
+} from './services/firebase';
 
 const App: React.FC = () => {
   const [currentUser, setCurrentUser] = useState<string | null>(null);
@@ -19,6 +25,13 @@ const App: React.FC = () => {
   // Add state to track if we're in mobile chat view
   const [isInMobileChatView, setIsInMobileChatView] = useState(false);
   
+  // Track unread message count
+  interface UnreadCounts {
+    direct: number;
+    group: number;
+  }
+  const [unreadCount, setUnreadCount] = useState<UnreadCounts>({ direct: 0, group: 0 });
+  
   useEffect(() => {
     // Check if user is logged in from local storage
     const storedUser = localStorage.getItem('currentUser');
@@ -29,6 +42,17 @@ const App: React.FC = () => {
       checkUserCancellationStatus(storedUser);
       
       // Load user profile picture
+      loadUserProfilePicture(storedUser);
+    }
+  }, []);
+  
+  useEffect(() => {
+    // Since we're not using Firebase Authentication (no auth import)
+    // We'll just use localStorage for user login state
+    const storedUser = localStorage.getItem('currentUser');
+    if (storedUser) {
+      setCurrentUser(storedUser);
+      checkUserCancellationStatus(storedUser);
       loadUserProfilePicture(storedUser);
     }
   }, []);
@@ -50,17 +74,6 @@ const App: React.FC = () => {
       
       setShowApologyScreen(shouldShowApology);
     }
-  };
-  
-  const handleLogin = async (username: string) => {
-    setCurrentUser(username);
-    localStorage.setItem('currentUser', username);
-    
-    // Check cancellation status after login
-    await checkUserCancellationStatus(username);
-    
-    // Load profile picture
-    await loadUserProfilePicture(username);
   };
   
   const handleLogout = () => {
@@ -89,6 +102,48 @@ const App: React.FC = () => {
   const handleProfileUpdate = (imageUrl: string) => {
     setUserProfilePicture(imageUrl);
   };
+  
+  // Update unread count at regular intervals
+  useEffect(() => {
+    if (!currentUser) return;
+    
+    const updateUnreadCount = async () => {
+      const count = await getUnreadMessageCount(currentUser);
+      setUnreadCount(count);
+    };
+    
+    updateUnreadCount();
+    const interval = setInterval(updateUnreadCount, 30000); // Check every 30 seconds
+    
+    return () => clearInterval(interval);
+  }, [currentUser]);
+  
+  // Handle keyboard visibility on iOS
+  useEffect(() => {
+    // These event listeners are for iOS to detect keyboard visibility
+    const handleKeyboardShow = () => {
+      document.body.classList.add('keyboard-visible');
+    };
+    
+    const handleKeyboardHide = () => {
+      document.body.classList.remove('keyboard-visible');
+    };
+    
+    window.addEventListener('keyboardWillShow', handleKeyboardShow);
+    window.addEventListener('keyboardDidShow', handleKeyboardShow);
+    window.addEventListener('keyboardWillHide', handleKeyboardHide);
+    window.addEventListener('keyboardDidHide', handleKeyboardHide);
+    
+    return () => {
+      window.removeEventListener('keyboardWillShow', handleKeyboardShow);
+      window.removeEventListener('keyboardDidShow', handleKeyboardShow);
+      window.removeEventListener('keyboardWillHide', handleKeyboardHide);
+      window.removeEventListener('keyboardDidHide', handleKeyboardHide);
+    };
+  }, []);
+  
+  // Determine if we're using mobile view
+  const isMobile = window.innerWidth <= 768;
   
   return (
     <div className={`app ${isInMobileChatView ? 'in-mobile-chat' : ''}`}>
@@ -160,6 +215,9 @@ const App: React.FC = () => {
                   >
                     <span role="img" aria-label="messages">💬</span>
                     <span>Messages</span>
+                    {(unreadCount.direct + unreadCount.group) > 0 && 
+                      <span className="badge">{unreadCount.direct + unreadCount.group}</span>
+                    }
                   </div>
                   <div 
                     className={`bottom-nav-item ${activeTab === 'profile' ? 'active' : ''}`}
@@ -197,7 +255,7 @@ const App: React.FC = () => {
           )}
         </>
       ) : (
-        <LoginForm onLogin={handleLogin} />
+        <LoginForm onLogin={setCurrentUser} />
       )}
     </div>
   );
