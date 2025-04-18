@@ -1049,4 +1049,41 @@ h3 .emoji-icon {
 .sophia-username::after {
   content: "🎀";
   margin-left: 5px;
+}
+
+/* kikiwiki special styling */
+.kiki-username {
+  font-weight: 700;
+  background: linear-gradient(to right, #c0c0c0, #ff69b4, #c0c0c0);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  text-shadow: 0 0 10px rgba(192, 192, 192, 0.5), 0 0 20px rgba(255, 105, 180, 0.5);
+  animation: kiki-shine 3s infinite;
+  position: relative;
+  z-index: 1;
+}
+
+@keyframes kiki-shine {
+  0% {
+    filter: drop-shadow(0 0 3px rgba(192, 192, 192, 0.7));
+  }
+  50% {
+    filter: drop-shadow(0 0 8px rgba(255, 105, 180, 0.9));
+  }
+  100% {
+    filter: drop-shadow(0 0 3px rgba(192, 192, 192, 0.7));
+  }
+}
+
+.kiki-username::before {
+  content: "✨";
+  margin-right: 5px;
+  color: #c0c0c0;
+}
+
+.kiki-username::after {
+  content: "💫";
+  margin-left: 5px;
+  color: #ff69b4;
 } 
