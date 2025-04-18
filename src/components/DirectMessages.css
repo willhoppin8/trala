@@ -38,6 +38,12 @@
   align-items: center;
 }
 
+.dm-header-actions {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
 .dm-header h3 {
   margin: 0;
   font-size: 1.2rem;
@@ -57,6 +63,29 @@
 
 .new-message-btn:hover {
   filter: brightness(1.1);
+}
+
+.back-btn {
+  background-color: rgba(255, 255, 255, 0.1);
+  color: var(--text-color);
+  border: none;
+  border-radius: 20px;
+  padding: 6px 12px;
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: var(--transition);
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+}
+
+.back-btn:hover {
+  background-color: rgba(255, 255, 255, 0.2);
+}
+
+/* Only show mobile-only button in mobile view */
+.back-btn.mobile-only {
+  display: none;
 }
 
 .new-message-form {
@@ -174,6 +203,10 @@
   justify-content: center;
   color: white;
   font-weight: 600;
+}
+
+.dm-chat-avatar-img {
+  margin-right: 5px;
 }
 
 .dm-chat-name {
@@ -312,17 +345,53 @@
     border-right: none;
   }
   
+  /* In mobile view, conversation list should have normal layout */
   .dm-sidebar {
     width: 100%;
     max-width: 100%;
     min-width: 0;
     border-right: none;
     border-bottom: 1px solid var(--border-color);
-    max-height: 50vh;
+    max-height: unset;
+    height: auto;
   }
   
   .dm-main {
-    height: 50vh;
+    height: auto;
+    width: 100%;
+  }
+  
+  /* When in an active chat (mobile-view class added), occupy the full screen */
+  .dm-container.mobile-view {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100vh;
+    z-index: 1000;
+    min-height: 100vh;
+    border: none;
+    border-radius: 0;
+  }
+  
+  /* For a fullscreen chat experience */
+  .mobile-view .dm-main {
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+  }
+  
+  .mobile-view .dm-messages {
+    flex: 1;
+    height: calc(100vh - 120px); /* Account for header and input */
+    overflow-y: auto;
+  }
+  
+  /* Make sure the input stays at the bottom */
+  .mobile-view .dm-input {
+    position: sticky;
+    bottom: 0;
+    background-color: var(--card-background);
   }
   
   .dm-message {
@@ -343,5 +412,28 @@
   
   .dm-messages {
     padding: 10px;
+  }
+  
+  .back-btn.mobile-only {
+    display: flex;
+  }
+  
+  .dm-chat-header {
+    padding: 12px 10px;
+  }
+  
+  .dm-chat-header .back-btn {
+    padding: 5px 10px;
+    margin-right: 10px;
+  }
+  
+  /* Adjust padding in conversation list mode vs. chat mode */
+  .dm-container:not(.mobile-view) {
+    padding-bottom: 60px; /* Leave space for bottom nav */
+  }
+  
+  /* Ensure the message list doesn't get pushed down too much */
+  .dm-container:not(.mobile-view) .dm-main {
+    padding-bottom: 0;
   }
 } 

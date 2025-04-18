@@ -15,6 +15,9 @@ const App: React.FC = () => {
   const [showApologyScreen, setShowApologyScreen] = useState(false);
   const [userProfilePicture, setUserProfilePicture] = useState<string | undefined>(undefined);
   
+  // Add state to track if we're in mobile chat view
+  const [isInMobileChatView, setIsInMobileChatView] = useState(false);
+  
   useEffect(() => {
     // Check if user is logged in from local storage
     const storedUser = localStorage.getItem('currentUser');
@@ -80,24 +83,27 @@ const App: React.FC = () => {
   };
   
   return (
-    <div className="app">
-      <header className="app-header">
-        <h1 className="app-title">🦈 TRALA 🦈</h1>
-        {currentUser && (
-          <div className="user-controls">
-            <div className="user-info" onClick={() => setActiveTab('profile')}>
-              <ProfilePicture
-                imageUrl={userProfilePicture}
-                username={currentUser}
-                size="small"
-                className="header-profile-picture"
-              />
-              <span className="welcome-message">Welcome, {currentUser}</span>
+    <div className={`app ${isInMobileChatView ? 'in-mobile-chat' : ''}`}>
+      {/* Only hide header when in mobile chat view */}
+      {!isInMobileChatView && (
+        <header className="app-header">
+          <h1 className="app-title">🦈 TRALA 🦈</h1>
+          {currentUser && (
+            <div className="user-controls">
+              <div className="user-info" onClick={() => setActiveTab('profile')}>
+                <ProfilePicture
+                  imageUrl={userProfilePicture}
+                  username={currentUser}
+                  size="small"
+                  className="header-profile-picture"
+                />
+                <span className="welcome-message">Welcome, {currentUser}</span>
+              </div>
+              <button onClick={handleLogout} className="logout-button">Logout</button>
             </div>
-            <button onClick={handleLogout} className="logout-button">Logout</button>
-          </div>
-        )}
-      </header>
+          )}
+        </header>
+      )}
       
       {currentUser ? (
         <>
@@ -107,7 +113,8 @@ const App: React.FC = () => {
               onApologyComplete={handleApologyComplete} 
             />
           ) : (
-            <div className="app-content">
+            <div className={`app-content ${isInMobileChatView ? 'in-mobile-chat' : ''}`}>
+              {/* Show desktop tabs always, but only show bottom nav when not in chat view */}
               <div className="app-tabs">
                 <button 
                   className={`app-tab ${activeTab === 'posts' ? 'active' : ''}`}
@@ -129,30 +136,32 @@ const App: React.FC = () => {
                 </button>
               </div>
               
-              {/* Bottom Navigation for Mobile */}
-              <div className="bottom-nav">
-                <div 
-                  className={`bottom-nav-item ${activeTab === 'posts' ? 'active' : ''}`}
-                  onClick={() => setActiveTab('posts')}
-                >
-                  <span role="img" aria-label="posts">📝</span>
-                  <span>Posts</span>
+              {/* Bottom Navigation for Mobile - show when not in active chat */}
+              {!isInMobileChatView && (
+                <div className="bottom-nav">
+                  <div 
+                    className={`bottom-nav-item ${activeTab === 'posts' ? 'active' : ''}`}
+                    onClick={() => setActiveTab('posts')}
+                  >
+                    <span role="img" aria-label="posts">📝</span>
+                    <span>Posts</span>
+                  </div>
+                  <div 
+                    className={`bottom-nav-item ${activeTab === 'messages' ? 'active' : ''}`}
+                    onClick={() => setActiveTab('messages')}
+                  >
+                    <span role="img" aria-label="messages">💬</span>
+                    <span>Messages</span>
+                  </div>
+                  <div 
+                    className={`bottom-nav-item ${activeTab === 'profile' ? 'active' : ''}`}
+                    onClick={() => setActiveTab('profile')}
+                  >
+                    <span role="img" aria-label="profile">👤</span>
+                    <span>Profile</span>
+                  </div>
                 </div>
-                <div 
-                  className={`bottom-nav-item ${activeTab === 'messages' ? 'active' : ''}`}
-                  onClick={() => setActiveTab('messages')}
-                >
-                  <span role="img" aria-label="messages">💬</span>
-                  <span>Messages</span>
-                </div>
-                <div 
-                  className={`bottom-nav-item ${activeTab === 'profile' ? 'active' : ''}`}
-                  onClick={() => setActiveTab('profile')}
-                >
-                  <span role="img" aria-label="profile">👤</span>
-                  <span>Profile</span>
-                </div>
-              </div>
+              )}
               
               {activeTab === 'posts' ? (
                 <PostingApp 
@@ -165,6 +174,8 @@ const App: React.FC = () => {
                   username={currentUser} 
                   initialRecipient={directMessageUser}
                   userProfilePicture={userProfilePicture}
+                  setInMobileChatView={setIsInMobileChatView}
+                  navigateBack={() => setActiveTab('posts')}
                 />
               ) : (
                 <UserProfile
