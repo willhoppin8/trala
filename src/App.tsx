@@ -12,6 +12,7 @@ const App: React.FC = () => {
   const [currentUser, setCurrentUser] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<'posts' | 'messages' | 'profile'>('posts');
   const [directMessageUser, setDirectMessageUser] = useState<string | null>(null);
+  const [initialGroupId, setInitialGroupId] = useState<string | null>(null);
   const [showApologyScreen, setShowApologyScreen] = useState(false);
   const [userProfilePicture, setUserProfilePicture] = useState<string | undefined>(undefined);
   
@@ -71,6 +72,13 @@ const App: React.FC = () => {
   
   const handleStartDM = (username: string) => {
     setDirectMessageUser(username);
+    setInitialGroupId(null);
+    setActiveTab('messages');
+  };
+  
+  const handleSwitchToGroup = (groupId: string) => {
+    setInitialGroupId(groupId);
+    setDirectMessageUser(null);
     setActiveTab('messages');
   };
   
@@ -136,7 +144,7 @@ const App: React.FC = () => {
                 </button>
               </div>
               
-              {/* Bottom Navigation for Mobile - show when not in active chat */}
+              {/* Bottom Navigation for Mobile - show when not in active chat view */}
               {!isInMobileChatView && (
                 <div className="bottom-nav">
                   <div 
@@ -173,15 +181,16 @@ const App: React.FC = () => {
                 <DirectMessages 
                   username={currentUser} 
                   initialRecipient={directMessageUser}
+                  initialGroupId={initialGroupId}
                   userProfilePicture={userProfilePicture}
                   setInMobileChatView={setIsInMobileChatView}
                   navigateBack={() => setActiveTab('posts')}
+                  switchToGroups={handleSwitchToGroup}
                 />
               ) : (
                 <UserProfile
                   username={currentUser}
-                  isCurrentUser={true}
-                  onProfileUpdate={handleProfileUpdate}
+                  onProfilePictureUpdate={handleProfileUpdate}
                 />
               )}
             </div>

@@ -436,4 +436,353 @@
   .dm-container:not(.mobile-view) .dm-main {
     padding-bottom: 0;
   }
+}
+
+.dm-chat-actions {
+  margin-left: auto;
+  display: flex;
+  gap: 10px;
+}
+
+.create-group-btn {
+  background-color: #0088cc;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  padding: 6px 12px;
+  font-size: 0.9rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  transition: background-color 0.2s;
+}
+
+.create-group-btn:hover {
+  background-color: #006699;
+}
+
+.create-group-form {
+  padding: 15px;
+  background-color: #f9f9f9;
+  border-bottom: 1px solid #e1e1e1;
+}
+
+.create-group-form input[type="text"] {
+  width: 100%;
+  padding: 10px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  margin-bottom: 10px;
+  font-size: 1rem;
+}
+
+.form-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+.form-actions button {
+  padding: 8px 15px;
+  border-radius: 4px;
+  font-size: 0.9rem;
+  cursor: pointer;
+}
+
+.form-actions button[type="submit"] {
+  background-color: #0088cc;
+  color: white;
+  border: none;
+}
+
+.form-actions button[type="submit"]:hover {
+  background-color: #006699;
+}
+
+.cancel-btn {
+  background-color: transparent;
+  border: 1px solid #ddd;
+  color: #555;
+}
+
+.cancel-btn:hover {
+  background-color: #f0f0f0;
+}
+
+/* Add styles for group avatars and other group-specific elements */
+.group-avatar {
+  width: 40px;
+  height: 40px;
+  background-color: var(--accent-color);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.2rem;
+  color: white;
+  margin-right: 12px;
+}
+
+.group-avatar.large {
+  width: 45px;
+  height: 45px;
+  font-size: 1.4rem;
+}
+
+.group-indicator {
+  font-size: 0.7rem;
+  background-color: var(--accent-color);
+  color: white;
+  padding: 2px 6px;
+  border-radius: 10px;
+  margin-left: 8px;
+  font-weight: normal;
+}
+
+.dm-chat-info {
+  display: flex;
+  flex-direction: column;
+}
+
+.group-members-count {
+  font-size: 0.8rem;
+  color: var(--secondary-text);
+  margin-top: 2px;
+}
+
+/* Add styles for the new group button in the header */
+.new-group-btn {
+  background-color: var(--accent-color);
+  color: white;
+  border: none;
+  border-radius: 20px;
+  padding: 6px 12px;
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: var(--transition);
+  font-weight: 600;
+}
+
+.new-group-btn:hover {
+  filter: brightness(1.1);
+}
+
+.manage-members-btn {
+  background-color: var(--accent-color);
+  color: white;
+  border: none;
+  border-radius: 20px;
+  padding: 6px 12px;
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: var(--transition);
+  font-weight: 600;
+}
+
+.manage-members-btn:hover {
+  filter: brightness(1.1);
+}
+
+/* Styles for the new group form */
+.new-group-form {
+  padding: 15px;
+  border-bottom: 1px solid var(--border-color);
+  background-color: rgba(0, 0, 0, 0.1);
+}
+
+.new-group-form input[type="text"] {
+  width: 100%;
+  padding: 10px;
+  border-radius: 8px;
+  border: 1px solid var(--border-color);
+  background-color: var(--input-bg);
+  color: var(--text-color);
+  font-size: 0.95rem;
+  margin-bottom: 10px;
+}
+
+.members-selection {
+  margin-bottom: 15px;
+}
+
+.members-selection label {
+  display: block;
+  margin-bottom: 8px;
+  font-weight: 500;
+  color: var(--text-color);
+}
+
+.members-list {
+  max-height: 200px;
+  overflow-y: auto;
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  background-color: rgba(0, 0, 0, 0.2);
+  padding: 5px;
+  margin-bottom: 10px;
+}
+
+.member-option {
+  padding: 8px;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+  transition: var(--transition);
+  margin-bottom: 4px;
+}
+
+.member-option:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+}
+
+.member-option.selected {
+  background-color: rgba(56, 189, 248, 0.2);
+  border: 1px solid rgba(56, 189, 248, 0.3);
+}
+
+.member-option span {
+  margin-left: 8px;
+  flex: 1;
+  color: var(--text-color);
+}
+
+.checkmark {
+  color: var(--accent-color);
+  font-weight: bold;
+  margin-left: auto;
+}
+
+.form-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+.form-actions button {
+  padding: 8px 15px;
+  border-radius: 20px;
+  font-size: 0.9rem;
+  cursor: pointer;
+}
+
+.form-actions button[type="submit"] {
+  background-color: var(--accent-color);
+  color: white;
+  border: none;
+}
+
+.form-actions button[type="submit"]:hover {
+  filter: brightness(1.1);
+}
+
+.form-actions button[type="submit"]:disabled {
+  background-color: #808080;
+  cursor: not-allowed;
+}
+
+.cancel-btn {
+  background-color: transparent;
+  border: 1px solid var(--border-color);
+  color: var(--text-color);
+}
+
+.cancel-btn:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+}
+
+/* Style for group members list */
+.group-members {
+  display: flex;
+  flex-wrap: wrap;
+  padding: 10px 15px;
+  background-color: rgba(0, 0, 0, 0.2);
+  gap: 10px;
+  border-bottom: 1px solid var(--border-color);
+  max-height: 120px;
+  overflow-y: auto;
+}
+
+.group-member {
+  display: flex;
+  align-items: center;
+  background-color: rgba(255, 255, 255, 0.1);
+  padding: 5px 10px;
+  border-radius: 20px;
+  font-size: 0.85rem;
+}
+
+.group-member span {
+  margin: 0 5px;
+  color: var(--text-color);
+}
+
+.remove-member-btn {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  border: none;
+  background-color: rgba(255, 0, 0, 0.6);
+  color: white;
+  font-size: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  margin-left: 5px;
+  transition: var(--transition);
+}
+
+.remove-member-btn:hover {
+  background-color: rgba(255, 0, 0, 0.8);
+}
+
+/* Styles for the add member form */
+.add-member-form {
+  padding: 10px 15px;
+  background-color: rgba(0, 0, 0, 0.2);
+  border-bottom: 1px solid var(--border-color);
+  display: flex;
+  gap: 10px;
+}
+
+.add-member-form select {
+  flex: 1;
+  padding: 8px;
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  background-color: var(--input-bg);
+  color: var(--text-color);
+  font-size: 0.9rem;
+}
+
+.add-member-form button {
+  background-color: var(--accent-color);
+  color: white;
+  border: none;
+  border-radius: 20px;
+  padding: 6px 12px;
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: var(--transition);
+  font-weight: 600;
+}
+
+.add-member-form button:hover {
+  filter: brightness(1.1);
+}
+
+/* Group message styling */
+.message-sender-info {
+  display: flex;
+  align-items: center;
+  margin-bottom: 5px;
+}
+
+.message-sender {
+  font-weight: 600;
+  font-size: 0.85rem;
+  margin-left: 5px;
+  color: var(--accent-color);
 } 

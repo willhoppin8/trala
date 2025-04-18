@@ -25,6 +25,8 @@ const postsRef = ref(database, 'TRALA');
 const usersRef = ref(database, 'users');
 // Reference to the direct messages collection
 const dmsRef = ref(database, 'directMessages');
+// Reference to the group chats collection
+const groupChatsRef = ref(database, 'groupChats');
 
 // Poll option interface
 export interface PollOption {
@@ -70,6 +72,8 @@ export interface User {
   uncancelVotes?: string[]; // Users who voted to uncancel
   lastApology?: number; // Timestamp of the last apology
   profilePictureUrl?: string; // URL to the user's profile picture
+  phoneNumber?: string; // Phone number for SMS notifications
+  receiveNotifications?: boolean; // Whether user wants to receive notifications
 }
 
 // Direct Message interface
@@ -80,6 +84,27 @@ export interface DirectMessage {
   content: string;
   timestamp: number;
   read: boolean;
+}
+
+// Group Chat interface
+export interface GroupChat {
+  id?: string;
+  name: string;
+  creator: string;
+  members: string[];
+  createdAt: number;
+  lastMessage?: string;
+  lastMessageTime?: number;
+  messages?: {[messageId: string]: GroupMessage};
+}
+
+// Group Message interface
+export interface GroupMessage {
+  id?: string;
+  sender: string;
+  content: string;
+  timestamp: number;
+  read: {[userId: string]: boolean};
 }
 
 // Register a new user
@@ -664,4 +689,277 @@ export const votePollOption = async (postId: string, optionId: string, username:
 export const isPollEnded = (pollEndTime?: number): boolean => {
   if (!pollEndTime) return false;
   return Date.now() > pollEndTime;
+};
+
+// Create a new group chat
+export const createGroupChat = async (
+  name: string, 
+  creator: string, 
+  members: string[]
+): Promise<string | null> => {
+  try {
+    // Ensure the creator is included in members
+    if (!members.includes(creator)) {
+      members.push(creator);
+    }
+    
+    const newGroupChatRef = push(groupChatsRef);
+    const groupChat: GroupChat = {
+      name,
+      creator,
+      members,
+      createdAt: Date.now()
+    };
+    
+    await set(newGroupChatRef, groupChat);
+    return newGroupChatRef.key;
+  } catch (error) {
+    console.error('Error creating group chat:', error);
+    return null;
+  }
+};
+
+// Send a message to a group chat
+export const sendGroupMessage = async (
+  groupId: string, 
+  message: Omit<GroupMessage, 'id' | 'read'>
+): Promise<string | null> => {
+  try {
+    // Get group members to initialize read status
+    const groupRef = ref(database, `groupChats/${groupId}`);
+    const groupSnapshot = await get(groupRef);
+    
+    if (!groupSnapshot.exists()) {
+      console.error('Group chat not found');
+      return null;
+    }
+    
+    const group = groupSnapshot.val() as GroupChat;
+    const readStatus: {[userId: string]: boolean} = {};
+    
+    // Initialize read status (sender has read their own message)
+    group.members.forEach(member => {
+      readStatus[member] = member === message.sender;
+    });
+    
+    // Add the message
+    const messagesRef = ref(database, `groupChats/${groupId}/messages`);
+    const newMessageRef = push(messagesRef);
+    
+    await set(newMessageRef, {
+      ...message,
+      read: readStatus
+    });
+    
+    // Update group chat metadata
+    await update(groupRef, {
+      lastMessage: message.content,
+      lastMessageTime: message.timestamp
+    });
+    
+    return newMessageRef.key;
+  } catch (error) {
+    console.error('Error sending group message:', error);
+    return null;
+  }
+};
+
+// Get messages for a specific group chat
+export const getGroupMessages = (
+  groupId: string, 
+  callback: (messages: GroupMessage[]) => void
+) => {
+  const messagesRef = ref(database, `groupChats/${groupId}/messages`);
+  
+  onValue(messagesRef, (snapshot) => {
+    const messages: GroupMessage[] = [];
+    snapshot.forEach((childSnapshot) => {
+      const message = childSnapshot.val();
+      messages.push({
+        id: childSnapshot.key,
+        ...message
+      });
+    });
+    
+    // Sort by timestamp
+    messages.sort((a, b) => a.timestamp - b.timestamp);
+    callback(messages);
+  });
+};
+
+// Get all group chats for a user
+export const getUserGroupChats = (
+  username: string, 
+  callback: (groupChats: GroupChat[]) => void
+) => {
+  onValue(groupChatsRef, (snapshot) => {
+    const groupChats: GroupChat[] = [];
+    snapshot.forEach((childSnapshot) => {
+      const groupChat = childSnapshot.val() as GroupChat;
+      
+      // Only include group chats where the user is a member
+      if (groupChat.members && groupChat.members.includes(username)) {
+        groupChats.push({
+          id: childSnapshot.key,
+          ...groupChat
+        });
+      }
+    });
+    
+    // Sort by most recent message
+    groupChats.sort((a, b) => {
+      const timeA = a.lastMessageTime || a.createdAt;
+      const timeB = b.lastMessageTime || b.createdAt;
+      return timeB - timeA;
+    });
+    
+    callback(groupChats);
+  });
+};
+
+// Add a user to a group chat
+export const addUserToGroup = async (
+  groupId: string, 
+  username: string
+): Promise<boolean> => {
+  try {
+    const groupRef = ref(database, `groupChats/${groupId}`);
+    const snapshot = await get(groupRef);
+    
+    if (!snapshot.exists()) {
+      console.error('Group chat not found');
+      return false;
+    }
+    
+    const groupChat = snapshot.val() as GroupChat;
+    
+    // Check if user is already in the group
+    if (groupChat.members.includes(username)) {
+      return true; // Already a member
+    }
+    
+    // Add user to members array
+    groupChat.members.push(username);
+    
+    // Update group chat
+    await update(groupRef, {
+      members: groupChat.members
+    });
+    
+    return true;
+  } catch (error) {
+    console.error('Error adding user to group:', error);
+    return false;
+  }
+};
+
+// Remove a user from a group chat
+export const removeUserFromGroup = async (
+  groupId: string, 
+  username: string, 
+  currentUser: string
+): Promise<boolean> => {
+  try {
+    const groupRef = ref(database, `groupChats/${groupId}`);
+    const snapshot = await get(groupRef);
+    
+    if (!snapshot.exists()) {
+      console.error('Group chat not found');
+      return false;
+    }
+    
+    const groupChat = snapshot.val() as GroupChat;
+    
+    // Only the creator or the user themselves can remove a user
+    if (groupChat.creator !== currentUser && currentUser !== username) {
+      console.error('Not authorized to remove user');
+      return false;
+    }
+    
+    // Filter out the user from members array
+    const updatedMembers = groupChat.members.filter(member => member !== username);
+    
+    // Update group chat
+    await update(groupRef, {
+      members: updatedMembers
+    });
+    
+    return true;
+  } catch (error) {
+    console.error('Error removing user from group:', error);
+    return false;
+  }
+};
+
+// Mark group messages as read for a user
+export const markGroupMessagesAsRead = async (
+  groupId: string, 
+  username: string
+): Promise<boolean> => {
+  try {
+    const messagesRef = ref(database, `groupChats/${groupId}/messages`);
+    const snapshot = await get(messagesRef);
+    
+    snapshot.forEach((childSnapshot) => {
+      const message = childSnapshot.val() as GroupMessage;
+      // Only mark unread messages
+      if (message.read && !message.read[username]) {
+        const updatedRead = {...message.read, [username]: true};
+        update(child(messagesRef, childSnapshot.key!), { read: updatedRead });
+      }
+    });
+    
+    return true;
+  } catch (error) {
+    console.error('Error marking group messages as read:', error);
+    return false;
+  }
+};
+
+// Get unread message count for a user across all chats and groups
+export const getUnreadMessageCount = async (
+  username: string
+): Promise<{direct: number, group: number}> => {
+  try {
+    const counts = { direct: 0, group: 0 };
+    
+    // Check direct messages
+    const dmsSnapshot = await get(dmsRef);
+    dmsSnapshot.forEach((convoSnapshot) => {
+      const convo = convoSnapshot.val();
+      if (convo.participants && convo.participants.includes(username) && convo.messages) {
+        Object.values(convo.messages).forEach((msg: any) => {
+          if (msg.recipient === username && !msg.read) {
+            counts.direct++;
+          }
+        });
+      }
+    });
+    
+    // Check group messages
+    const groupsSnapshot = await get(groupChatsRef);
+    groupsSnapshot.forEach((groupSnapshot) => {
+      const groupData = groupSnapshot.val();
+      // Check if the group has messages
+      if (groupData.members && 
+          groupData.members.includes(username) && 
+          groupData.messages) {
+        
+        // Loop through messages
+        Object.values(groupData.messages).forEach((msg: any) => {
+          // Check if the message is unread by the current user
+          if (msg.read && 
+              msg.sender !== username && 
+              msg.read[username] === false) {
+            counts.group++;
+          }
+        });
+      }
+    });
+    
+    return counts;
+  } catch (error) {
+    console.error('Error getting unread message count:', error);
+    return { direct: 0, group: 0 };
+  }
 }; 

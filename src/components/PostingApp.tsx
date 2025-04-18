@@ -19,6 +19,7 @@ import {
   votePollOption,
   isPollEnded
 } from '../services/firebase';
+import { sendNotificationToSubscribers } from '../services/twilio';
 import './PostingApp.css';
 import ProfilePicture from './ProfilePicture';
 
@@ -449,6 +450,11 @@ const PostingApp: React.FC<PostingAppProps> = ({ username, startDMWithUser, user
     if (postId) {
       // Send notifications to mentioned users
       sendMentionNotifications(content.trim(), 'post');
+      
+      // Send SMS notifications to subscribers
+      sendNotificationToSubscribers(username).catch(err => 
+        console.log('SMS notification log:', err)
+      );
       
       setContent('');
       setImage(null);
@@ -1057,24 +1063,6 @@ const PostingApp: React.FC<PostingAppProps> = ({ username, startDMWithUser, user
                     onClick={() => handleDelete(post.id!)}
                   >
                     🗑️ Delete
-                  </button>
-                )}
-                
-                {username !== post.author && !users[post.author]?.isCancelled && (
-                  <button
-                    className="cancel-button small"
-                    onClick={() => setConfirmCancel(confirmCancel === post.author ? null : post.author)}
-                  >
-                    {confirmCancel === post.author ? '❗ Confirm Cancel' : '⚠️ Cancel User'}
-                  </button>
-                )}
-                
-                {username !== post.author && users[post.author]?.isCancelled && (
-                  <button
-                    className="uncancel-button small"
-                    onClick={() => handleUncancelVote(post.author)}
-                  >
-                    ✅ Vote to Uncancel
                   </button>
                 )}
               </div>

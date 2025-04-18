@@ -1,46 +1,53 @@
-# Getting Started with Create React App
+# TRALA Social Media App
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+A simple social media application with posting, direct messaging, and cancellation features.
 
-## Available Scripts
+## Features
 
-In the project directory, you can run:
+- User registration and login
+- Create and view posts with images/GIFs
+- Like and dislike posts
+- Create polls with multiple options
+- Comment on posts
+- Direct messaging between users
+- SMS notifications using Twilio
+- @mentions in posts and comments
+- User cancellation system
+- Profile picture management
 
-### `npm start`
+## SMS Notification Setup
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in the browser.
+The app includes SMS notifications via Twilio when new posts are made. To enable this:
 
-The page will reload if you make edits.\
-You will also see any lint errors in the console.
+1. Copy the `.env.example` file and rename it to `.env.local`
+2. Update the environment variables with your Twilio credentials:
+   ```
+   REACT_APP_TWILIO_ACCOUNT_SID=your_account_sid_here
+   REACT_APP_TWILIO_AUTH_TOKEN=your_auth_token_here
+   REACT_APP_TWILIO_PHONE_NUMBER=your_twilio_phone_number_here
+   ```
+3. Restart the development server
 
-### `npm test`
+Users can opt in to SMS notifications by adding their phone number in their profile settings.
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+## Local Development
 
-### `npm run build`
+1. Clone the repository
+2. Install dependencies: `npm install`
+3. Set up environment variables as described above
+4. Start the development server: `npm start`
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+## Production Deployment
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+For production deployment (such as on Vercel):
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+1. Set the environment variables in your hosting platform's settings
+2. Deploy the application
 
-### `npm run eject`
+## Security Note
 
-**Note: this is a one-way operation. Once you `eject`, you can’t go back!**
+For production use, SMS notifications should be handled by a backend server or serverless function to avoid exposing API credentials in client-side code. The current implementation is designed for learning purposes only.
 
-If you aren’t satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+## License
 
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you’re on your own.
-
-You don’t have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn’t feel obligated to use this feature. However we understand that this tool wouldn’t be useful if you couldn’t customize it when you are ready for it.
-
-## Learn More
-
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
-
-To learn React, check out the [React documentation](https://reactjs.org/).
+[MIT](LICENSE)
