@@ -1017,4 +1017,36 @@ h3 .emoji-icon {
   text-transform: uppercase;
   letter-spacing: 0.5px;
   animation: pulse 2s infinite;
+}
+
+/* SophiaAnnabelle special styling */
+.sophia-username {
+  font-weight: 700;
+  color: #ff69b4;
+  text-shadow: 0 0 10px #ff8dc6, 0 0 20px #ff6eb5, 0 0 30px #ff41a6;
+  animation: sophia-pulse 2s infinite;
+  position: relative;
+  z-index: 1;
+}
+
+@keyframes sophia-pulse {
+  0% {
+    text-shadow: 0 0 10px #ff8dc6, 0 0 20px #ff6eb5, 0 0 30px #ff41a6;
+  }
+  50% {
+    text-shadow: 0 0 15px #ff8dc6, 0 0 25px #ff6eb5, 0 0 40px #ff41a6, 0 0 60px rgba(255, 105, 180, 0.7);
+  }
+  100% {
+    text-shadow: 0 0 10px #ff8dc6, 0 0 20px #ff6eb5, 0 0 30px #ff41a6;
+  }
+}
+
+.sophia-username::before {
+  content: "🎀";
+  margin-right: 5px;
+}
+
+.sophia-username::after {
+  content: "🎀";
+  margin-left: 5px;
 } 

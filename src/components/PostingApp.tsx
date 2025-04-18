@@ -231,9 +231,14 @@ const PostingApp: React.FC<PostingAppProps> = ({ username, startDMWithUser }) =>
         const username = word.slice(1);
         if (usersList.includes(username)) {
           const isGodlike = username.toLowerCase() === 'will';
+          const isSophia = username === 'SophiaAnnabelle';
+          let className = "mention";
+          if (isGodlike) className += " godlike-username";
+          if (isSophia) className += " sophia-username";
+          
           return (
             <React.Fragment key={i}>
-              <span className={`mention ${isGodlike ? 'godlike-username' : ''}`}>@{username}</span>
+              <span className={className}>@{username}</span>
               {i < words.length - 1 ? ' ' : ''}
             </React.Fragment>
           );
@@ -634,7 +639,10 @@ const PostingApp: React.FC<PostingAppProps> = ({ username, startDMWithUser }) =>
               <div className="post-header">
                 <div className="author-info">
                   <h4 
-                    className={`post-author ${post.author !== username ? 'clickable' : ''} ${post.author.toLowerCase() === 'will' ? 'godlike-username' : ''}`}
+                    className={`post-author ${post.author !== username ? 'clickable' : ''} ${
+                      post.author.toLowerCase() === 'will' ? 'godlike-username' : 
+                      post.author === 'SophiaAnnabelle' ? 'sophia-username' : ''
+                    }`}
                     onClick={(e) => post.author !== username && handleStartDM(post.author, e)}
                     title={post.author !== username ? `Message ${post.author}` : ''}
                   >
@@ -745,7 +753,10 @@ const PostingApp: React.FC<PostingAppProps> = ({ username, startDMWithUser }) =>
                           <div className="comment-header">
                             <div className="author-info">
                               <span 
-                                className={`comment-author ${comment.author !== username ? 'clickable' : ''} ${comment.author.toLowerCase() === 'will' ? 'godlike-username' : ''}`}
+                                className={`comment-author ${comment.author !== username ? 'clickable' : ''} ${
+                                  comment.author.toLowerCase() === 'will' ? 'godlike-username' : 
+                                  comment.author === 'SophiaAnnabelle' ? 'sophia-username' : ''
+                                }`}
                                 onClick={(e) => comment.author !== username && handleStartDM(comment.author, e)}
                                 title={comment.author !== username ? `Message ${comment.author}` : ''}
                               >
