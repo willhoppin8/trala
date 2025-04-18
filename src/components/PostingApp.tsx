@@ -16,10 +16,12 @@ import {
   sendDirectMessage
 } from '../services/firebase';
 import './PostingApp.css';
+import ProfilePicture from './ProfilePicture';
 
 interface PostingAppProps {
   username: string;
   startDMWithUser?: (username: string) => void;
+  userProfilePicture?: string;
 }
 
 interface MentionData {
@@ -28,7 +30,7 @@ interface MentionData {
   mentionCharIndex: number;
 }
 
-const PostingApp: React.FC<PostingAppProps> = ({ username, startDMWithUser }) => {
+const PostingApp: React.FC<PostingAppProps> = ({ username, startDMWithUser, userProfilePicture }) => {
   const [posts, setPosts] = useState<Post[]>([]);
   const [users, setUsers] = useState<{[key: string]: User}>({});
   const [usersList, setUsersList] = useState<string[]>([]);
@@ -523,8 +525,8 @@ const PostingApp: React.FC<PostingAppProps> = ({ username, startDMWithUser }) =>
     return null;
   };
 
-  // Add function to handle starting DM from user click
-  const handleStartDM = (userToMessage: string, e: React.MouseEvent) => {
+  // Update the handleStartDM function to be more generic
+  const handleStartDM = (userToMessage: string, e: React.MouseEvent<HTMLElement>) => {
     e.stopPropagation();
     if (startDMWithUser && userToMessage !== username) {
       startDMWithUser(userToMessage);
@@ -558,7 +560,7 @@ const PostingApp: React.FC<PostingAppProps> = ({ username, startDMWithUser }) =>
                   <div 
                     key={user} 
                     className={`mention-item ${index === selectedMention ? 'selected' : ''}`}
-                    onClick={() => handleSelectMention(user)}
+                    onClick={(e) => handleSelectMention(user)}
                   >
                     <span className="mention-avatar">{user.charAt(0).toUpperCase()}</span>
                     <span className="mention-username">{user}</span>
@@ -641,6 +643,13 @@ const PostingApp: React.FC<PostingAppProps> = ({ username, startDMWithUser }) =>
             <div key={post.id} className={`post ${post.isApology ? 'apology-post' : ''}`}>
               <div className="post-header">
                 <div className="author-info">
+                  <ProfilePicture 
+                    imageUrl={post.author === username ? userProfilePicture : users[post.author]?.profilePictureUrl}
+                    username={post.author}
+                    size="small"
+                    onClick={(e: React.MouseEvent<HTMLDivElement>) => post.author !== username && handleStartDM(post.author, e)}
+                    className={post.author !== username ? 'clickable' : ''}
+                  />
                   <h4 
                     className={`post-author ${post.author !== username ? 'clickable' : ''} ${
                       post.author.toLowerCase() === 'will' ? 'godlike-username' : 
@@ -735,7 +744,7 @@ const PostingApp: React.FC<PostingAppProps> = ({ username, startDMWithUser }) =>
                               <div 
                                 key={user} 
                                 className={`mention-item ${index === selectedMention ? 'selected' : ''}`}
-                                onClick={() => handleSelectMention(user, true)}
+                                onClick={(e) => handleSelectMention(user, true)}
                               >
                                 <span className="mention-avatar">{user.charAt(0).toUpperCase()}</span>
                                 <span className="mention-username">{user}</span>
@@ -756,6 +765,13 @@ const PostingApp: React.FC<PostingAppProps> = ({ username, startDMWithUser }) =>
                         <div key={comment.id} className="comment">
                           <div className="comment-header">
                             <div className="author-info">
+                              <ProfilePicture 
+                                imageUrl={comment.author === username ? userProfilePicture : users[comment.author]?.profilePictureUrl}
+                                username={comment.author}
+                                size="small"
+                                onClick={(e: React.MouseEvent<HTMLDivElement>) => comment.author !== username && handleStartDM(comment.author, e)}
+                                className={comment.author !== username ? 'clickable' : ''}
+                              />
                               <span 
                                 className={`comment-author ${comment.author !== username ? 'clickable' : ''} ${
                                   comment.author.toLowerCase() === 'will' ? 'godlike-username' : 

@@ -10,25 +10,33 @@ import {
   User
 } from '../services/firebase';
 import './DirectMessages.css';
+import ProfilePicture from './ProfilePicture';
 
 interface DirectMessagesProps {
   username: string;
   initialRecipient?: string | null;
+  userProfilePicture?: string;
 }
 
-const DirectMessages: React.FC<DirectMessagesProps> = ({ username, initialRecipient }) => {
+const DirectMessages: React.FC<DirectMessagesProps> = ({ username, initialRecipient, userProfilePicture }) => {
   const [conversations, setConversations] = useState<any[]>([]);
   const [currentChat, setCurrentChat] = useState<string | null>(null);
   const [messages, setMessages] = useState<DirectMessage[]>([]);
   const [messageText, setMessageText] = useState('');
-  const [users, setUsers] = useState<User[]>([]);
+  const [users, setUsers] = useState<{[username: string]: User}>({});
   const [showNewMessage, setShowNewMessage] = useState(false);
   const [newMessageRecipient, setNewMessageRecipient] = useState('');
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     // Get all users
-    getUsers(setUsers);
+    getUsers((allUsers) => {
+      const usersMap: {[username: string]: User} = {};
+      allUsers.forEach(user => {
+        usersMap[user.username] = user;
+      });
+      setUsers(usersMap);
+    });
     
     // Get all conversations for this user
     getUserConversations(username, setConversations);
@@ -149,11 +157,11 @@ const DirectMessages: React.FC<DirectMessagesProps> = ({ username, initialRecipi
               required
             >
               <option value="">Select a user</option>
-              {users
-                .filter(user => user.username !== username)
+              {Object.keys(users)
+                .filter(user => user !== username)
                 .map(user => (
-                  <option key={user.username} value={user.username}>
-                    {user.username}
+                  <option key={user} value={user}>
+                    {user}
                   </option>
                 ))
               }
@@ -172,9 +180,11 @@ const DirectMessages: React.FC<DirectMessagesProps> = ({ username, initialRecipi
                 className={`conversation-item ${currentChat === convo.otherUser ? 'active' : ''}`}
                 onClick={() => setCurrentChat(convo.otherUser)}
               >
-                <div className="conversation-avatar">
-                  {convo.otherUser.charAt(0).toUpperCase()}
-                </div>
+                <ProfilePicture
+                  imageUrl={users[convo.otherUser]?.profilePictureUrl}
+                  username={convo.otherUser}
+                  size="medium"
+                />
                 <div className="conversation-info">
                   <div className="conversation-name">
                     {convo.otherUser}
@@ -208,6 +218,14 @@ const DirectMessages: React.FC<DirectMessagesProps> = ({ username, initialRecipi
                   key={message.id || index} 
                   className={`dm-message ${message.sender === username ? 'sent' : 'received'}`}
                 >
+                  {message.sender !== username && (
+                    <ProfilePicture
+                      imageUrl={users[message.sender]?.profilePictureUrl}
+                      username={message.sender}
+                      size="small"
+                      className="message-avatar"
+                    />
+                  )}
                   <div className="dm-message-content">
                     {message.content}
                   </div>

@@ -55,6 +55,7 @@ export interface User {
   cancelledBy?: string[];
   uncancelVotes?: string[]; // Users who voted to uncancel
   lastApology?: number; // Timestamp of the last apology
+  profilePictureUrl?: string; // URL to the user's profile picture
 }
 
 // Direct Message interface
@@ -496,6 +497,57 @@ export const getUserStatus = async (username: string): Promise<User | null> => {
     return null;
   } catch (error) {
     console.error('Error getting user status:', error);
+    return null;
+  }
+};
+
+// Upload a profile picture
+export const uploadProfilePicture = async (username: string, file: File): Promise<string | null> => {
+  try {
+    // Create a reference to the file location
+    const fileRef = storageRef(storage, `profilePictures/${username}_${Date.now()}`);
+    
+    // Upload the file
+    await uploadBytes(fileRef, file);
+    
+    // Get the download URL
+    const downloadUrl = await getDownloadURL(fileRef);
+    
+    // Update the user's profile in the database
+    await updateUserProfile(username, { profilePictureUrl: downloadUrl });
+    
+    return downloadUrl;
+  } catch (error) {
+    console.error('Error uploading profile picture:', error);
+    return null;
+  }
+};
+
+// Update user profile
+export const updateUserProfile = async (username: string, updateData: Partial<User>): Promise<boolean> => {
+  try {
+    const userRef = ref(database, `users/${username}`);
+    await update(userRef, updateData);
+    return true;
+  } catch (error) {
+    console.error('Error updating user profile:', error);
+    return false;
+  }
+};
+
+// Get user profile
+export const getUserProfile = async (username: string): Promise<User | null> => {
+  try {
+    const userRef = ref(database, `users/${username}`);
+    const snapshot = await get(userRef);
+    
+    if (snapshot.exists()) {
+      return snapshot.val() as User;
+    }
+    
+    return null;
+  } catch (error) {
+    console.error('Error getting user profile:', error);
     return null;
   }
 }; 

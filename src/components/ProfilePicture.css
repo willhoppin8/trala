@@ -1,0 +1,135 @@
+.profile-picture {
+  border-radius: 50%;
+  overflow: hidden;
+  background-color: var(--card-background);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 2px solid var(--border-color);
+  transition: var(--transition);
+  position: relative;
+}
+
+.profile-picture.small {
+  width: 36px;
+  height: 36px;
+}
+
+.profile-picture.medium {
+  width: 50px;
+  height: 50px;
+}
+
+.profile-picture.large {
+  width: 100px;
+  height: 100px;
+}
+
+.profile-picture img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.profile-initial {
+  font-weight: 700;
+  color: var(--text-color);
+  font-size: 1.2rem;
+  text-transform: uppercase;
+  background: var(--primary-gradient);
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.profile-picture.small .profile-initial {
+  font-size: 0.8rem;
+}
+
+.profile-picture.large .profile-initial {
+  font-size: 2rem;
+}
+
+/* Clickable style */
+.profile-picture.clickable {
+  cursor: pointer;
+}
+
+.profile-picture.clickable:hover {
+  transform: scale(1.05);
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
+}
+
+/* Special styling for will's profile picture */
+.godlike-profile {
+  border: 2px solid #ffd700;
+  box-shadow: 0 0 10px #ffcc00, 0 0 20px #ffbb00;
+  animation: godlike-profile-pulse 2s infinite;
+}
+
+.godlike-profile .profile-initial {
+  background: linear-gradient(to right, #ffd700, #ffcc00);
+  color: #000;
+}
+
+@keyframes godlike-profile-pulse {
+  0% {
+    box-shadow: 0 0 10px #ffcc00, 0 0 20px #ffbb00;
+  }
+  50% {
+    box-shadow: 0 0 15px #ffcc00, 0 0 25px #ffbb00;
+  }
+  100% {
+    box-shadow: 0 0 10px #ffcc00, 0 0 20px #ffbb00;
+  }
+}
+
+/* Special styling for SophiaAnnabelle's profile picture */
+.sophia-profile {
+  border: 2px solid #ff69b4;
+  box-shadow: 0 0 10px #ff8dc6, 0 0 20px #ff6eb5;
+  animation: sophia-profile-pulse 2s infinite;
+}
+
+.sophia-profile .profile-initial {
+  background: linear-gradient(to right, #ff69b4, #ff41a6);
+  color: #fff;
+}
+
+@keyframes sophia-profile-pulse {
+  0% {
+    box-shadow: 0 0 10px #ff8dc6, 0 0 20px #ff6eb5;
+  }
+  50% {
+    box-shadow: 0 0 15px #ff8dc6, 0 0 25px #ff6eb5;
+  }
+  100% {
+    box-shadow: 0 0 10px #ff8dc6, 0 0 20px #ff6eb5;
+  }
+}
+
+/* Special styling for kikiwiki's profile picture */
+.kiki-profile {
+  border: 2px solid #c0c0c0;
+  box-shadow: 0 0 10px rgba(192, 192, 192, 0.5), 0 0 20px rgba(255, 105, 180, 0.5);
+  animation: kiki-profile-shine 3s infinite;
+}
+
+.kiki-profile .profile-initial {
+  background: linear-gradient(to right, #c0c0c0, #ff69b4, #c0c0c0);
+  color: white;
+}
+
+@keyframes kiki-profile-shine {
+  0% {
+    box-shadow: 0 0 10px rgba(192, 192, 192, 0.7), 0 0 0 rgba(255, 105, 180, 0);
+  }
+  50% {
+    box-shadow: 0 0 5px rgba(192, 192, 192, 0.3), 0 0 15px rgba(255, 105, 180, 0.7);
+  }
+  100% {
+    box-shadow: 0 0 10px rgba(192, 192, 192, 0.7), 0 0 0 rgba(255, 105, 180, 0);
+  }
+} 

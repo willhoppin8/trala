@@ -70,6 +70,25 @@ main {
   gap: 15px;
 }
 
+.user-info {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+  padding: 5px 10px;
+  border-radius: 20px;
+  transition: var(--transition);
+  background-color: rgba(255, 255, 255, 0.05);
+}
+
+.user-info:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+}
+
+.header-profile-picture {
+  margin-right: 5px;
+}
+
 .welcome-message {
   color: var(--text-color);
   font-size: 0.95rem;
