@@ -3,6 +3,7 @@ import {
   Post, 
   Comment, 
   User,
+  PollOption,
   addPost, 
   getPosts, 
   likePost, 
@@ -14,7 +15,9 @@ import {
   cancelUser,
   voteToUncancelUser,
   getUsers,
-  sendDirectMessage
+  sendDirectMessage,
+  votePollOption,
+  isPollEnded
 } from '../services/firebase';
 import './PostingApp.css';
 import ProfilePicture from './ProfilePicture';
@@ -51,6 +54,13 @@ const PostingApp: React.FC<PostingAppProps> = ({ username, startDMWithUser, user
   const [showCommentMentions, setShowCommentMentions] = useState(false);
   const [commentMentionData, setCommentMentionData] = useState<MentionData | null>(null);
   const [selectedMention, setSelectedMention] = useState<number>(0);
+  const [isGif, setIsGif] = useState<boolean>(false);
+  
+  // Poll state
+  const [isPollPost, setIsPollPost] = useState<boolean>(false);
+  const [pollQuestion, setPollQuestion] = useState<string>('');
+  const [pollOptions, setPollOptions] = useState<string[]>(['', '']);
+  const [pollDuration, setPollDuration] = useState<string>('1d'); // Default: 1 day
   
   const fileInputRef = useRef<HTMLInputElement>(null);
   const formRef = useRef<HTMLFormElement>(null);
@@ -301,6 +311,10 @@ const PostingApp: React.FC<PostingAppProps> = ({ username, startDMWithUser, user
       const selectedFile = e.target.files[0];
       setImage(selectedFile);
       
+      // Check if it's a GIF
+      const isFileGif = selectedFile.type === 'image/gif' || selectedFile.name.toLowerCase().endsWith('.gif');
+      setIsGif(isFileGif);
+      
       // Create preview
       const reader = new FileReader();
       reader.onload = (event) => {
@@ -313,17 +327,74 @@ const PostingApp: React.FC<PostingAppProps> = ({ username, startDMWithUser, user
   const handleClearImage = () => {
     setImage(null);
     setImagePreview(null);
+    setIsGif(false);
     if (fileInputRef.current) {
       fileInputRef.current.value = '';
     }
   };
 
+  const handlePollOption = (index: number, value: string) => {
+    const newOptions = [...pollOptions];
+    newOptions[index] = value;
+    setPollOptions(newOptions);
+  };
+  
+  const addPollOption = () => {
+    if (pollOptions.length < 6) { // Limit to 6 options
+      setPollOptions([...pollOptions, '']);
+    } else {
+      setMessage('Maximum 6 options allowed');
+      setTimeout(() => setMessage(''), 3000);
+    }
+  };
+  
+  const removePollOption = (index: number) => {
+    if (pollOptions.length > 2) { // Minimum 2 options
+      const newOptions = [...pollOptions];
+      newOptions.splice(index, 1);
+      setPollOptions(newOptions);
+    }
+  };
+  
+  const resetPollState = () => {
+    setIsPollPost(false);
+    setPollQuestion('');
+    setPollOptions(['', '']);
+    setPollDuration('1d');
+  };
+  
+  const calculatePollEndTime = (): number => {
+    const now = Date.now();
+    switch(pollDuration) {
+      case '1h': return now + 60 * 60 * 1000; // 1 hour
+      case '1d': return now + 24 * 60 * 60 * 1000; // 1 day
+      case '3d': return now + 3 * 24 * 60 * 60 * 1000; // 3 days
+      case '7d': return now + 7 * 24 * 60 * 60 * 1000; // 7 days
+      default: return now + 24 * 60 * 60 * 1000; // Default: 1 day
+    }
+  };
+  
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!content.trim()) {
+    if (!content.trim() && !isPollPost) {
       setMessage('Post content cannot be empty');
       return;
+    }
+    
+    if (isPollPost) {
+      // Validate poll data
+      if (!pollQuestion.trim()) {
+        setMessage('Poll question cannot be empty');
+        return;
+      }
+      
+      // Ensure at least 2 valid options
+      const validOptions = pollOptions.filter(option => option.trim() !== '');
+      if (validOptions.length < 2) {
+        setMessage('Please provide at least 2 poll options');
+        return;
+      }
     }
 
     setIsSubmitting(true);
@@ -346,6 +417,31 @@ const PostingApp: React.FC<PostingAppProps> = ({ username, startDMWithUser, user
       }
       // Only add imageUrl if upload was successful
       newPost.imageUrl = imageUrl;
+      // Add isGif flag if the image is a GIF
+      if (isGif) {
+        newPost.isGif = true;
+      }
+    }
+    
+    // Add poll data if this is a poll post
+    if (isPollPost) {
+      const validOptions = pollOptions.filter(option => option.trim() !== '');
+      const pollOptionsObject: { [key: string]: PollOption } = {};
+      
+      validOptions.forEach((option, index) => {
+        const optionId = `option_${index}`;
+        pollOptionsObject[optionId] = {
+          id: optionId,
+          text: option.trim(),
+          votes: 0,
+          voters: []
+        };
+      });
+      
+      newPost.isPoll = true;
+      newPost.pollQuestion = pollQuestion.trim();
+      newPost.pollOptions = pollOptionsObject as any;
+      newPost.pollEndTime = calculatePollEndTime();
     }
 
     const postId = await addPost(newPost);
@@ -357,6 +453,7 @@ const PostingApp: React.FC<PostingAppProps> = ({ username, startDMWithUser, user
       setContent('');
       setImage(null);
       setImagePreview(null);
+      resetPollState();
       if (fileInputRef.current) {
         fileInputRef.current.value = '';
       }
@@ -541,49 +638,210 @@ const PostingApp: React.FC<PostingAppProps> = ({ username, startDMWithUser, user
     }
   };
 
+  // Function to check if a URL is a GIF
+  const isGifUrl = (url: string): boolean => {
+    return url.toLowerCase().includes('.gif') || url.toLowerCase().includes('image/gif');
+  };
+
+  const handleVotePoll = async (postId: string, optionId: string) => {
+    const success = await votePollOption(postId, optionId, username);
+    if (success) {
+      // No need to show message - the real-time update will reflect the change
+    } else {
+      setMessage('Failed to vote on poll. Please try again.');
+      setTimeout(() => setMessage(''), 3000);
+    }
+  };
+  
+  const calculatePollPercentage = (votes: number, totalVotes: number): number => {
+    if (totalVotes === 0) return 0;
+    return Math.round((votes / totalVotes) * 100);
+  };
+  
+  const formatRemainingTime = (endTime: number): string => {
+    const now = Date.now();
+    const diff = endTime - now;
+    
+    if (diff <= 0) return 'Poll ended';
+    
+    const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+    const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+    const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+    
+    if (days > 0) {
+      return `${days}d ${hours}h remaining`;
+    } else if (hours > 0) {
+      return `${hours}h ${minutes}m remaining`;
+    } else {
+      return `${minutes}m remaining`;
+    }
+  };
+  
+  const hasUserVoted = (pollOptions: { [key: string]: PollOption }): boolean => {
+    if (!pollOptions) return false;
+    
+    return Object.values(pollOptions).some(option => 
+      option.voters && option.voters.includes(username)
+    );
+  };
+  
+  const getUserVote = (pollOptions: { [key: string]: PollOption }): string | null => {
+    if (!pollOptions) return null;
+    
+    const userVote = Object.entries(pollOptions).find(([_, option]) => 
+      option.voters && option.voters.includes(username)
+    );
+    
+    return userVote ? userVote[0] : null;
+  };
+
+  // Handle poll option tab key navigation
+  const handlePollOptionKeyDown = (e: React.KeyboardEvent, index: number) => {
+    if (e.key === 'Tab' && index === pollOptions.length - 1 && !e.shiftKey) {
+      // If tabbing from the last poll option, add a new one if possible
+      e.preventDefault();
+      if (pollOptions.length < 6) {
+        addPollOption();
+      }
+    }
+  };
+
   return (
     <div className="posting-app">
       <h2 className="app-description">Share your thoughts with the community</h2>
       
       <form ref={formRef} className="post-form" onSubmit={handleSubmit}>
-        <div className="form-group">
-          <label htmlFor="content">
-            <span>Your Message</span>
-            <span className="emoji-icon">💬</span>
-            <span className="mention-hint">Use @ to mention users</span>
-          </label>
-          <div className="textarea-container">
-            <textarea
-              id="content"
-              value={content}
-              onChange={handleContentChange}
-              onKeyDown={(e) => handleMentionKeyDown(e)}
-              required
-              placeholder="What's on your mind today?"
-              rows={4}
-              ref={textareaRef}
-            />
-            
-            {showMentions && (
-              <div className="mentions-dropdown" ref={mentionsRef}>
-                {filteredUsers.map((user, index) => (
-                  <div 
-                    key={user} 
-                    className={`mention-item ${index === selectedMention ? 'selected' : ''}`}
-                    onClick={(e) => handleSelectMention(user)}
-                  >
-                    <span className="mention-avatar">{user.charAt(0).toUpperCase()}</span>
-                    <span className="mention-username">{user}</span>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
+        <div className="post-type-selector">
+          <button 
+            type="button" 
+            className={`post-type-btn ${!isPollPost ? 'active' : ''}`}
+            onClick={() => setIsPollPost(false)}
+          >
+            <span className="emoji-icon">📝</span> Regular Post
+          </button>
+          <button 
+            type="button" 
+            className={`post-type-btn ${isPollPost ? 'active' : ''}`}
+            onClick={() => setIsPollPost(true)}
+          >
+            <span className="emoji-icon">📊</span> Create Poll
+          </button>
         </div>
+        
+        {isPollPost ? (
+          <div className="poll-creation">
+            <div className="form-group">
+              <label htmlFor="pollQuestion">
+                <span>Poll Question</span>
+                <span className="emoji-icon">❓</span>
+              </label>
+              <input
+                type="text"
+                id="pollQuestion"
+                value={pollQuestion}
+                onChange={(e) => setPollQuestion(e.target.value)}
+                placeholder="Ask a question..."
+                required={isPollPost}
+              />
+            </div>
+            
+            <div className="form-group">
+              <label>
+                <span>Poll Options</span>
+                <span className="emoji-icon">🔤</span>
+              </label>
+              {pollOptions.map((option, index) => (
+                <div key={index} className="poll-option-input">
+                  <input
+                    type="text"
+                    value={option}
+                    onChange={(e) => handlePollOption(index, e.target.value)}
+                    onKeyDown={(e) => handlePollOptionKeyDown(e, index)}
+                    placeholder={`Option ${index + 1}`}
+                    required={isPollPost}
+                    className="poll-option-field"
+                  />
+                  {index > 1 && (
+                    <button 
+                      type="button" 
+                      className="remove-option-btn"
+                      onClick={() => removePollOption(index)}
+                    >
+                      ✕
+                    </button>
+                  )}
+                </div>
+              ))}
+              
+              {pollOptions.length < 6 && (
+                <button 
+                  type="button" 
+                  className="add-option-btn"
+                  onClick={addPollOption}
+                >
+                  <span className="button-icon">➕</span> Add Option
+                </button>
+              )}
+            </div>
+            
+            <div className="form-group">
+              <label htmlFor="pollDuration">
+                <span>Poll Duration</span>
+                <span className="emoji-icon">⏱️</span>
+              </label>
+              <select
+                id="pollDuration"
+                value={pollDuration}
+                onChange={(e) => setPollDuration(e.target.value)}
+                className="poll-duration-select"
+              >
+                <option value="1h">1 hour</option>
+                <option value="1d">1 day</option>
+                <option value="3d">3 days</option>
+                <option value="7d">7 days</option>
+              </select>
+            </div>
+          </div>
+        ) : (
+          <div className="form-group">
+            <label htmlFor="content">
+              <span>Your Message</span>
+              <span className="emoji-icon">💬</span>
+              <span className="mention-hint">Use @ to mention users</span>
+            </label>
+            <div className="textarea-container">
+              <textarea
+                id="content"
+                value={content}
+                onChange={handleContentChange}
+                onKeyDown={(e) => handleMentionKeyDown(e)}
+                required={!isPollPost}
+                placeholder="What's on your mind today?"
+                rows={4}
+                ref={textareaRef}
+              />
+              
+              {showMentions && (
+                <div className="mentions-dropdown" ref={mentionsRef}>
+                  {filteredUsers.map((user, index) => (
+                    <div 
+                      key={user} 
+                      className={`mention-item ${index === selectedMention ? 'selected' : ''}`}
+                      onClick={(e) => handleSelectMention(user)}
+                    >
+                      <span className="mention-avatar">{user.charAt(0).toUpperCase()}</span>
+                      <span className="mention-username">{user}</span>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+        )}
 
         <div className="form-group">
           <label htmlFor="image">
-            <span>Add an Image</span>
+            <span>Add an Image or GIF</span>
             <span className="emoji-icon">🖼️</span>
             <span className="optional-label">optional</span>
           </label>
@@ -591,22 +849,22 @@ const PostingApp: React.FC<PostingAppProps> = ({ username, startDMWithUser, user
             <input
               type="file"
               id="image"
-              accept="image/*"
+              accept="image/*,.gif"
               onChange={handleImageChange}
               ref={fileInputRef}
               className="hidden-file-input"
             />
             <label htmlFor="image" className="custom-file-button">
               <span className="button-icon">➕</span>
-              <span>Add Photo</span>
+              <span>Add Photo or GIF</span>
             </label>
             {!imagePreview && (
-              <p className="file-helper">or drop an image here</p>
+              <p className="file-helper">or drop an image/GIF here</p>
             )}
           </div>
           
           {imagePreview && (
-            <div className="image-preview-container">
+            <div className={`image-preview-container ${isGif ? 'is-gif' : ''}`}>
               <img src={imagePreview} alt="Preview" className="image-preview" />
               <button 
                 type="button" 
@@ -628,8 +886,8 @@ const PostingApp: React.FC<PostingAppProps> = ({ username, startDMWithUser, user
             </span>
           ) : (
             <span className="button-content">
-              <span className="emoji-icon">✨</span>
-              <span>Share with the World</span>
+              <span className="emoji-icon">{isPollPost ? '📊' : '✨'}</span>
+              <span>{isPollPost ? 'Create Poll' : 'Share with the World'}</span>
             </span>
           )}
         </button>
@@ -650,7 +908,7 @@ const PostingApp: React.FC<PostingAppProps> = ({ username, startDMWithUser, user
           </div>
         ) : (
           posts.map(post => (
-            <div key={post.id} className={`post ${post.isApology ? 'apology-post' : ''}`}>
+            <div key={post.id} className={`post ${post.isApology ? 'apology-post' : ''} ${post.isPoll ? 'poll-post' : ''}`}>
               <div className="post-header">
                 <div className="author-info">
                   <ProfilePicture 
@@ -679,20 +937,95 @@ const PostingApp: React.FC<PostingAppProps> = ({ username, startDMWithUser, user
                 </span>
               </div>
               
-              <div className="post-content">
-                {post.isApology ? (
-                  <div className="apology-post-content">
-                    <span className="apology-label">OFFICIAL APOLOGY</span>
-                    {formatTextWithMentions(post.content)}
+              {/* Poll Content */}
+              {post.isPoll && post.pollOptions && post.pollQuestion && (
+                <div className="poll-container">
+                  <div className="poll-header">
+                    <span className="poll-indicator">POLL</span>
+                    {post.pollEndTime && (
+                      <span className="poll-timer">
+                        {isPollEnded(post.pollEndTime) ? 'Poll Ended' : formatRemainingTime(post.pollEndTime)}
+                      </span>
+                    )}
                   </div>
-                ) : (
-                  formatTextWithMentions(post.content)
-                )}
-              </div>
+                  
+                  <h4 className="poll-question">{post.pollQuestion}</h4>
+                  
+                  <div className="poll-options">
+                    {Object.entries(post.pollOptions).map(([optionId, option]) => {
+                      // Calculate total votes for percentage
+                      const totalVotes = Object.values(post.pollOptions || {}).reduce((sum, opt) => sum + (opt.votes || 0), 0);
+                      const percentage = calculatePollPercentage(option.votes || 0, totalVotes);
+                      const userVotedFor = option.voters && option.voters.includes(username);
+                      const pollEnded = post.pollEndTime ? isPollEnded(post.pollEndTime) : false;
+                      const anyVote = totalVotes > 0;
+                      
+                      return (
+                        <div key={optionId} className={`poll-option ${userVotedFor ? 'user-voted' : ''}`}>
+                          <button 
+                            className="poll-vote-btn"
+                            onClick={() => !pollEnded && handleVotePoll(post.id!, optionId)} 
+                            disabled={pollEnded}
+                          >
+                            {/* Vote button with percentage fill */}
+                            <div className="poll-option-content">
+                              <span className="poll-option-text">{option.text}</span>
+                              <span className="poll-votes-count">
+                                {option.votes || 0} vote{(option.votes !== 1) ? 's' : ''}
+                              </span>
+                            </div>
+                            
+                            {/* Progress bar for votes */}
+                            {(anyVote || pollEnded) && (
+                              <div className="poll-progress-bar-container">
+                                <div 
+                                  className="poll-progress-bar" 
+                                  style={{ width: `${percentage}%` }}
+                                ></div>
+                                <span className="poll-percentage">{percentage}%</span>
+                              </div>
+                            )}
+                            
+                            {/* Show checkmark for user's vote */}
+                            {userVotedFor && (
+                              <span className="user-vote-indicator">✓</span>
+                            )}
+                          </button>
+                        </div>
+                      );
+                    })}
+                  </div>
+                  
+                  <div className="poll-footer">
+                    <span className="poll-total-votes">
+                      {Object.values(post.pollOptions).reduce((sum, opt) => sum + (opt.votes || 0), 0)} total votes
+                    </span>
+                    {!post.content?.trim() ? <span className="poll-text-indicator">Poll only</span> : null}
+                  </div>
+                </div>
+              )}
+              
+              {/* Regular post content */}
+              {(!post.isPoll || post.content?.trim()) && (
+                <div className="post-content">
+                  {post.isApology ? (
+                    <div className="apology-post-content">
+                      <span className="apology-label">OFFICIAL APOLOGY</span>
+                      {formatTextWithMentions(post.content)}
+                    </div>
+                  ) : (
+                    formatTextWithMentions(post.content)
+                  )}
+                </div>
+              )}
               
               {post.imageUrl && (
-                <div className="post-image">
-                  <img src={post.imageUrl} alt="Post" />
+                <div className="post-image-container">
+                  <img 
+                    src={post.imageUrl} 
+                    alt="Post" 
+                    className={`post-image ${isGifUrl(post.imageUrl) ? 'is-gif' : ''}`}
+                  />
                 </div>
               )}
               
@@ -724,6 +1057,24 @@ const PostingApp: React.FC<PostingAppProps> = ({ username, startDMWithUser, user
                     onClick={() => handleDelete(post.id!)}
                   >
                     🗑️ Delete
+                  </button>
+                )}
+                
+                {username !== post.author && !users[post.author]?.isCancelled && (
+                  <button
+                    className="cancel-button small"
+                    onClick={() => setConfirmCancel(confirmCancel === post.author ? null : post.author)}
+                  >
+                    {confirmCancel === post.author ? '❗ Confirm Cancel' : '⚠️ Cancel User'}
+                  </button>
+                )}
+                
+                {username !== post.author && users[post.author]?.isCancelled && (
+                  <button
+                    className="uncancel-button small"
+                    onClick={() => handleUncancelVote(post.author)}
+                  >
+                    ✅ Vote to Uncancel
                   </button>
                 )}
               </div>

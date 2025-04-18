@@ -26,6 +26,14 @@ const usersRef = ref(database, 'users');
 // Reference to the direct messages collection
 const dmsRef = ref(database, 'directMessages');
 
+// Poll option interface
+export interface PollOption {
+  id: string;
+  text: string;
+  votes: number;
+  voters: string[]; // Track who voted for this option
+}
+
 // Post interface
 export interface Post {
   id?: string;
@@ -35,8 +43,13 @@ export interface Post {
   likes?: number;
   dislikes?: number;
   imageUrl?: string;
+  isGif?: boolean;
   comments?: Comment[];
   isApology?: boolean;
+  isPoll?: boolean;
+  pollOptions?: {[key: string]: PollOption}; // Changed from PollOption[] to object map
+  pollQuestion?: string;
+  pollEndTime?: number; // Optional end time for the poll
 }
 
 // Comment interface
@@ -145,7 +158,20 @@ export const addPost = async (post: Omit<Post, 'id' | 'likes' | 'dislikes' | 'co
 
     // Only add imageUrl if it exists and is not undefined
     if (post.imageUrl) {
-      Object.assign(postData, { imageUrl: post.imageUrl });
+      Object.assign(postData, { 
+        imageUrl: post.imageUrl,
+        isGif: post.isGif || false 
+      });
+    }
+    
+    // Add poll data if this is a poll
+    if (post.isPoll) {
+      Object.assign(postData, {
+        isPoll: true,
+        pollQuestion: post.pollQuestion,
+        pollOptions: post.pollOptions,
+        pollEndTime: post.pollEndTime
+      });
     }
 
     const newPostRef = push(postsRef);
@@ -566,4 +592,76 @@ export const getUserProfile = async (username: string): Promise<User | null> => 
     console.error('Error getting user profile:', error);
     return null;
   }
+};
+
+// Vote on a poll option
+export const votePollOption = async (postId: string, optionId: string, username: string) => {
+  try {
+    // Get current poll data
+    const postRef = ref(database, `TRALA/${postId}`);
+    const snapshot = await get(postRef);
+    
+    if (!snapshot.exists()) {
+      console.error('Post not found');
+      return false;
+    }
+    
+    const post = snapshot.val();
+    
+    if (!post.isPoll || !post.pollOptions) {
+      console.error('Post is not a poll or has no options');
+      return false;
+    }
+    
+    // Find user's previous vote and remove it if exists
+    let updatedOptions = {...post.pollOptions};
+    
+    // Check each option to see if the user has already voted
+    let userPreviousVote = null;
+    Object.keys(updatedOptions).forEach(key => {
+      if (updatedOptions[key].voters && updatedOptions[key].voters.includes(username)) {
+        userPreviousVote = key;
+      }
+    });
+    
+    // If the user already voted for this option, remove their vote
+    if (userPreviousVote === optionId) {
+      // Remove user from voters list
+      updatedOptions[optionId].voters = updatedOptions[optionId].voters.filter((voter: string) => voter !== username);
+      // Decrease vote count
+      updatedOptions[optionId].votes = Math.max(0, (updatedOptions[optionId].votes || 0) - 1);
+      
+      // Update the poll options
+      await update(ref(database, `TRALA/${postId}/pollOptions`), updatedOptions);
+      return true;
+    }
+    
+    // If the user voted for a different option, remove that vote first
+    if (userPreviousVote) {
+      // Remove user from voters list
+      updatedOptions[userPreviousVote].voters = updatedOptions[userPreviousVote].voters.filter((voter: string) => voter !== username);
+      // Decrease vote count
+      updatedOptions[userPreviousVote].votes = Math.max(0, (updatedOptions[userPreviousVote].votes || 0) - 1);
+    }
+    
+    // Add the new vote
+    if (!updatedOptions[optionId].voters) {
+      updatedOptions[optionId].voters = [];
+    }
+    updatedOptions[optionId].voters.push(username);
+    updatedOptions[optionId].votes = (updatedOptions[optionId].votes || 0) + 1;
+    
+    // Update the poll options
+    await update(ref(database, `TRALA/${postId}/pollOptions`), updatedOptions);
+    return true;
+  } catch (error) {
+    console.error('Error voting on poll:', error);
+    return false;
+  }
+};
+
+// Check if a poll has ended
+export const isPollEnded = (pollEndTime?: number): boolean => {
+  if (!pollEndTime) return false;
+  return Date.now() > pollEndTime;
 }; 
