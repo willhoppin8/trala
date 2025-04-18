@@ -6,6 +6,7 @@ import {
   addPost, 
   getPosts, 
   likePost, 
+  dislikePost,
   deletePost, 
   uploadImage, 
   addComment, 
@@ -40,6 +41,7 @@ const PostingApp: React.FC<PostingAppProps> = ({ username, startDMWithUser, user
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [message, setMessage] = useState('');
   const [likeAnimation, setLikeAnimation] = useState<string | null>(null);
+  const [dislikeAnimation, setDislikeAnimation] = useState<string | null>(null);
   const [showComments, setShowComments] = useState<string | null>(null);
   const [commentText, setCommentText] = useState('');
   const [confirmCancel, setConfirmCancel] = useState<string | null>(null);
@@ -375,9 +377,15 @@ const PostingApp: React.FC<PostingAppProps> = ({ username, startDMWithUser, user
   };
 
   const handleLike = async (postId: string) => {
-    setLikeAnimation(postId);
     await likePost(postId);
+    setLikeAnimation(postId);
     setTimeout(() => setLikeAnimation(null), 1000);
+  };
+
+  const handleDislike = async (postId: string) => {
+    await dislikePost(postId);
+    setDislikeAnimation(postId);
+    setTimeout(() => setDislikeAnimation(null), 1000);
   };
 
   const handleDelete = async (postId: string) => {
@@ -535,7 +543,9 @@ const PostingApp: React.FC<PostingAppProps> = ({ username, startDMWithUser, user
 
   return (
     <div className="posting-app">
-      <form ref={formRef} onSubmit={handleSubmit} className="post-form">
+      <h2 className="app-description">Share your thoughts with the community</h2>
+      
+      <form ref={formRef} className="post-form" onSubmit={handleSubmit}>
         <div className="form-group">
           <label htmlFor="content">
             <span>Your Message</span>
@@ -681,39 +691,39 @@ const PostingApp: React.FC<PostingAppProps> = ({ username, startDMWithUser, user
               </div>
               
               {post.imageUrl && (
-                <div className="post-image-container">
-                  <img src={post.imageUrl} alt="Post" className="post-image" />
+                <div className="post-image">
+                  <img src={post.imageUrl} alt="Post" />
                 </div>
               )}
               
               <div className="post-actions">
                 <button 
-                  onClick={() => post.id && handleLike(post.id)}
-                  className={`like-button ${likeAnimation === post.id ? 'like-animation' : ''}`}
-                  aria-label="Like post"
+                  className={`like-button ${likeAnimation === post.id ? 'animate' : ''}`}
+                  onClick={() => handleLike(post.id!)}
                 >
-                  <span className="heart-icon">❤️</span> 
-                  <span className="like-count">{post.likes || 0}</span>
+                  👍 {post.likes || 0}
                 </button>
-                <button
-                  onClick={() => post.id && toggleComments(post.id)}
+                
+                <button 
+                  className={`dislike-button ${dislikeAnimation === post.id ? 'animate' : ''}`}
+                  onClick={() => handleDislike(post.id!)}
+                >
+                  👎 {post.dislikes || 0}
+                </button>
+                
+                <button 
                   className="comment-button"
-                  aria-label="Show comments"
+                  onClick={() => toggleComments(post.id!)}
                 >
-                  <span>💬</span>
-                  <span>
-                    {post.comments && post.comments.length > 0 
-                      ? `${post.comments.length} comment${post.comments.length !== 1 ? 's' : ''}` 
-                      : 'Comment'}
-                  </span>
+                  💬 {post.comments?.length || 0}
                 </button>
+                
                 {post.author === username && !post.isApology && (
-                  <button
-                    onClick={() => post.id && handleDelete(post.id)}
+                  <button 
                     className="delete-button"
-                    aria-label="Delete post"
+                    onClick={() => handleDelete(post.id!)}
                   >
-                    <span>🗑️ Delete</span>
+                    🗑️ Delete
                   </button>
                 )}
               </div>

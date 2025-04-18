@@ -33,6 +33,7 @@ export interface Post {
   author: string;
   timestamp: number;
   likes?: number;
+  dislikes?: number;
   imageUrl?: string;
   comments?: Comment[];
   isApology?: boolean;
@@ -130,7 +131,7 @@ export const uploadImage = async (file: File): Promise<string | null> => {
 };
 
 // Add a new post
-export const addPost = async (post: Omit<Post, 'id' | 'likes' | 'comments'>) => {
+export const addPost = async (post: Omit<Post, 'id' | 'likes' | 'dislikes' | 'comments'>) => {
   try {
     // Create post data with required fields, omitting undefined values
     const postData = {
@@ -138,6 +139,7 @@ export const addPost = async (post: Omit<Post, 'id' | 'likes' | 'comments'>) => 
       author: post.author,
       timestamp: post.timestamp,
       likes: 0,
+      dislikes: 0,
       comments: {}
     };
 
@@ -195,6 +197,20 @@ export const likePost = async (postId: string) => {
     return true;
   } catch (error) {
     console.error('Error liking post:', error);
+    return false;
+  }
+};
+
+// Dislike a post
+export const dislikePost = async (postId: string) => {
+  try {
+    const postRef = ref(database, `TRALA/${postId}`);
+    await update(postRef, {
+      dislikes: increment(1)
+    });
+    return true;
+  } catch (error) {
+    console.error('Error disliking post:', error);
     return false;
   }
 };

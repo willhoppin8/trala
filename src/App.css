@@ -267,6 +267,12 @@ main {
   max-width: 100%;
   width: 100%;
   height: 100vh;
+  overflow: hidden;
+}
+
+/* Keep padding at the bottom for conversation list to account for bottom nav */
+.app-content:not(.in-mobile-chat) {
+  padding-bottom: 80px;
 }
 
 /* Ensure mobile chat view takes full height and has no barriers */
@@ -275,5 +281,10 @@ main {
     min-height: 100vh;
     height: 100vh;
     overflow: hidden;
+  }
+  
+  /* Ensure bottom nav stays fixed at the bottom */
+  .bottom-nav {
+    z-index: 99;
   }
 }
