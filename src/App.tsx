@@ -82,7 +82,7 @@ const App: React.FC = () => {
   return (
     <div className="app">
       <header className="app-header">
-        <h1 className="app-title">SOCIAl MEDIsA APP TO CUREa ALL MALsADIES</h1>
+        <h1 className="app-title">🦈 TRALA 🦈</h1>
         {currentUser && (
           <div className="user-controls">
             <div className="user-info" onClick={() => setActiveTab('profile')}>
@@ -127,6 +127,31 @@ const App: React.FC = () => {
                 >
                   👤 Profile
                 </button>
+              </div>
+              
+              {/* Bottom Navigation for Mobile */}
+              <div className="bottom-nav">
+                <div 
+                  className={`bottom-nav-item ${activeTab === 'posts' ? 'active' : ''}`}
+                  onClick={() => setActiveTab('posts')}
+                >
+                  <span role="img" aria-label="posts">📝</span>
+                  <span>Posts</span>
+                </div>
+                <div 
+                  className={`bottom-nav-item ${activeTab === 'messages' ? 'active' : ''}`}
+                  onClick={() => setActiveTab('messages')}
+                >
+                  <span role="img" aria-label="messages">💬</span>
+                  <span>Messages</span>
+                </div>
+                <div 
+                  className={`bottom-nav-item ${activeTab === 'profile' ? 'active' : ''}`}
+                  onClick={() => setActiveTab('profile')}
+                >
+                  <span role="img" aria-label="profile">👤</span>
+                  <span>Profile</span>
+                </div>
               </div>
               
               {activeTab === 'posts' ? (
