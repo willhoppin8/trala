@@ -118,6 +118,7 @@
 .conversation-list {
   flex: 1;
   overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
   padding: 10px 0;
 }
 
@@ -218,6 +219,7 @@
   flex: 1;
   padding: 15px;
   overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
   display: flex;
   flex-direction: column;
   gap: 10px;
@@ -385,9 +387,10 @@
     bottom: 0;
     left: 0;
     width: 100%;
-    height: 120px;
+    height: 140px; /* Increased height to fully cover and overlap with input bar */
     background-color: var(--card-background);
     z-index: 990;
+    pointer-events: none; /* Allow scrolling through this element */
   }
   
   /* For a fullscreen chat experience */
@@ -396,13 +399,18 @@
     display: flex;
     flex-direction: column;
     padding-bottom: 80px; /* Add padding to prevent content from hiding behind input */
+    position: relative;
+    z-index: 991;
   }
   
   .mobile-view .dm-messages {
     flex: 1;
     height: calc(100vh - 200px); /* Reduce height to make room for input */
-    overflow-y: auto;
-    padding-bottom: 90px; /* Extra padding to ensure content is visible */
+    overflow-y: scroll;
+    -webkit-overflow-scrolling: touch;
+    padding-bottom: 150px; /* Increased padding to ensure messages aren't hidden under input */
+    position: relative;
+    z-index: 995;
   }
   
   /* Make sure the input stays at the bottom but ABOVE Safari UI */
@@ -413,6 +421,7 @@
     right: 0;
     background-color: var(--card-background);
     padding: 15px;
+    padding-bottom: 25px; /* Extra padding to ensure connection with background */
     z-index: 1001;
     border-top: 1px solid var(--border-color);
     box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.2); /* Add visible shadow for clarity */
@@ -421,9 +430,15 @@
   /* iOS specific fixes */
   @supports (-webkit-touch-callout: none) {
     .mobile-view .dm-input {
-      bottom: 120px; /* Keep this high enough to be above Safari chrome */
+      bottom: 125px; /* Adjusted to match with the background cover */
       padding-bottom: 15px;
       border-radius: 12px 12px 0 0; /* Rounded corners on top */
+      margin-bottom: 0; /* Ensure no margin creates a gap */
+    }
+    
+    /* Adjust background cover height for iOS */
+    .mobile-view::after {
+      height: 145px; /* Slightly larger for iOS */
     }
     
     .mobile-view .dm-input input {
@@ -433,7 +448,10 @@
     
     /* Adjust message container to prevent content from being hidden */
     .mobile-view .dm-messages {
-      padding-bottom: 140px; /* Extra padding to ensure content is visible */
+      padding-bottom: 180px; /* Extra padding to ensure content is visible and not under input */
+      overflow-y: scroll;
+      -webkit-overflow-scrolling: touch;
+      pointer-events: auto !important;
     }
   }
   
@@ -833,4 +851,16 @@
   font-size: 0.85rem;
   margin-left: 5px;
   color: var(--accent-color);
+}
+
+.message-end-spacer {
+  height: 40px;
+  width: 100%;
+  margin-top: 20px;
+}
+
+@media (max-width: 768px) {
+  .message-end-spacer {
+    height: 80px;
+  }
 } 

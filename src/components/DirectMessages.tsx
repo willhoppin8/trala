@@ -149,7 +149,11 @@ const DirectMessages: React.FC<DirectMessagesProps> = ({
     
     if (isActiveGroup) {
       // Load group messages
-      getGroupMessages(activeChatId, setGroupMessages);
+      getGroupMessages(activeChatId, (messages) => {
+        setGroupMessages(messages);
+        // Force scroll after messages load
+        setTimeout(scrollToBottom, 300);
+      });
       markGroupMessagesAsRead(activeChatId, username);
       
       // Set active group data
@@ -158,7 +162,11 @@ const DirectMessages: React.FC<DirectMessagesProps> = ({
     } else {
       // Load direct messages
       const otherUser = unifiedConversations.find(c => c.id === activeChatId)?.name || '';
-      getConversationMessages(username, otherUser, setDirectMessages);
+      getConversationMessages(username, otherUser, (messages) => {
+        setDirectMessages(messages);
+        // Force scroll after messages load
+        setTimeout(scrollToBottom, 300);
+      });
       
       // Mark messages as read
       markMessagesAsRead(activeChatId, username);
@@ -169,6 +177,25 @@ const DirectMessages: React.FC<DirectMessagesProps> = ({
       setInMobileChatView(true);
     }
   }, [activeChatId, isActiveGroup, username, unifiedConversations, groupChats, isMobileView, setInMobileChatView]);
+
+  // Add touch event effects for iOS scrolling
+  useEffect(() => {
+    // Find the messages container
+    const messagesContainer = document.querySelector('.dm-messages');
+    if (!messagesContainer) return;
+    
+    // Enable momentum scrolling manually for iOS
+    const handleTouchStart = (e: Event) => {
+      // This prevents other touch events from interfering
+      e.stopPropagation();
+    };
+    
+    messagesContainer.addEventListener('touchstart', handleTouchStart);
+    
+    return () => {
+      messagesContainer.removeEventListener('touchstart', handleTouchStart);
+    };
+  }, [activeChatId, directMessages, groupMessages]);
 
   // Scroll to bottom of messages
   useEffect(() => {
@@ -214,7 +241,30 @@ const DirectMessages: React.FC<DirectMessagesProps> = ({
   };
 
   const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    if (messagesEndRef.current) {
+      try {
+        // Try smooth scrolling first
+        messagesEndRef.current.scrollIntoView({ 
+          behavior: 'smooth',
+          block: 'end'
+        });
+        
+        // For iOS, also apply a manual scroll as backup
+        const messagesContainer = document.querySelector('.dm-messages');
+        if (messagesContainer) {
+          setTimeout(() => {
+            // Add extra scroll padding to make sure the last message is well above the input
+            messagesContainer.scrollTop = messagesContainer.scrollHeight + 100;
+          }, 100);
+        }
+      } catch (error) {
+        // Fallback to direct scrolling if smooth scrolling fails
+        const messagesContainer = document.querySelector('.dm-messages');
+        if (messagesContainer) {
+          messagesContainer.scrollTop = messagesContainer.scrollHeight + 100;
+        }
+      }
+    }
   };
 
   const handleSendMessage = (e: React.FormEvent) => {
@@ -700,6 +750,8 @@ const DirectMessages: React.FC<DirectMessagesProps> = ({
                     </div>
                   ))
                 )}
+                {/* Add extra space at the bottom */}
+                <div className="message-end-spacer" style={{ height: '40px' }}></div>
                 <div ref={messagesEndRef} />
               </div>
               
