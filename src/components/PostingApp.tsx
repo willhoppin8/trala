@@ -249,11 +249,13 @@ const PostingApp: React.FC<PostingAppProps> = ({ username, startDMWithUser, user
           const isSophia = username === 'SophiaAnnabelle';
           const isKiki = username.toLowerCase() === 'kikiwiki';
           const isWillImpersonator = username.toLowerCase().includes('will') && username.toLowerCase() !== 'will';
+          const isVersace = username.toUpperCase().includes('VERSACE');
           
           let className = "mention";
           if (isGodlike) className += " godlike-username";
           if (isSophia) className += " sophia-username";
           if (isKiki) className += " kiki-username";
+          if (isVersace) className += " versace-name";
           
           return (
             <React.Fragment key={i}>
@@ -930,7 +932,8 @@ const PostingApp: React.FC<PostingAppProps> = ({ username, startDMWithUser, user
                     className={`post-author ${post.author !== username ? 'clickable' : ''} ${
                       post.author.toLowerCase() === 'will' ? 'godlike-username' : 
                       post.author === 'SophiaAnnabelle' ? 'sophia-username' : 
-                      post.author.toLowerCase() === 'kikiwiki' ? 'kiki-username' : ''
+                      post.author.toLowerCase() === 'kikiwiki' ? 'kiki-username' : 
+                      post.author.toUpperCase().includes('VERSACE') ? 'versace-name' : ''
                     }`}
                     onClick={(e) => post.author !== username && handleStartDM(post.author, e)}
                     title={post.author !== username ? `Message ${post.author}` : ''}
@@ -1132,7 +1135,8 @@ const PostingApp: React.FC<PostingAppProps> = ({ username, startDMWithUser, user
                                 className={`comment-author ${comment.author !== username ? 'clickable' : ''} ${
                                   comment.author.toLowerCase() === 'will' ? 'godlike-username' : 
                                   comment.author === 'SophiaAnnabelle' ? 'sophia-username' : 
-                                  comment.author.toLowerCase() === 'kikiwiki' ? 'kiki-username' : ''
+                                  comment.author.toLowerCase() === 'kikiwiki' ? 'kiki-username' : 
+                                  comment.author.toUpperCase().includes('VERSACE') ? 'versace-name' : ''
                                 }`}
                                 onClick={(e) => comment.author !== username && handleStartDM(comment.author, e)}
                                 title={comment.author !== username ? `Message ${comment.author}` : ''}
