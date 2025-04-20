@@ -430,6 +430,15 @@ const DirectMessages: React.FC<DirectMessagesProps> = ({
     }
   };
 
+  // Add a helper function to check if a name contains VERSACE and apply the class
+  const formatName = (name: string) => {
+    const hasVersace = name.toUpperCase().includes('VERSACE');
+    if (hasVersace) {
+      return <span className="versace-name">{name}</span>;
+    }
+    return name;
+  };
+
   // In mobile view, we only show one section at a time
   const showSidebar = !isMobileView || !activeChatId;
   const showMainChat = !isMobileView || activeChatId;
@@ -556,7 +565,7 @@ const DirectMessages: React.FC<DirectMessagesProps> = ({
                   )}
                   <div className="conversation-info">
                     <div className="conversation-name">
-                      {convo.name}
+                      {formatName(convo.name)}
                       {convo.isGroup && <span className="group-indicator">Group</span>}
                     </div>
                     <div className="conversation-preview">
@@ -599,7 +608,7 @@ const DirectMessages: React.FC<DirectMessagesProps> = ({
                 )}
                 
                 <div className="dm-chat-info">
-                  <div className="dm-chat-name">{getActiveChatName()}</div>
+                  <div className="dm-chat-name">{formatName(getActiveChatName())}</div>
                   {isActiveGroup && activeGroupData && (
                     <div className="group-members-count">
                       {activeGroupData.members.length} members
@@ -684,7 +693,7 @@ const DirectMessages: React.FC<DirectMessagesProps> = ({
                         username={member}
                         size="small"
                       />
-                      <span>{member}</span>
+                      <span>{formatName(member)}</span>
                       {/* Only show remove button for creator or self */}
                       {(activeGroupData.creator === username || member === username) && member !== activeGroupData.creator && (
                         <button 
@@ -715,7 +724,7 @@ const DirectMessages: React.FC<DirectMessagesProps> = ({
                             size="small"
                             className="message-avatar"
                           />
-                          <span className="message-sender">{message.sender}</span>
+                          <span className="message-sender">{formatName(message.sender)}</span>
                         </div>
                       )}
                       <div className="dm-message-content">
@@ -734,12 +743,17 @@ const DirectMessages: React.FC<DirectMessagesProps> = ({
                       className={`dm-message ${message.sender === username ? 'sent' : 'received'}`}
                     >
                       {message.sender !== username && (
-                        <ProfilePicture
-                          imageUrl={users[message.sender]?.profilePictureUrl}
-                          username={message.sender}
-                          size="small"
-                          className="message-avatar"
-                        />
+                        <>
+                          <ProfilePicture
+                            imageUrl={users[message.sender]?.profilePictureUrl}
+                            username={message.sender}
+                            size="small"
+                            className="message-avatar"
+                          />
+                          <div className="message-sender-info">
+                            <span className="message-sender">{formatName(message.sender)}</span>
+                          </div>
+                        </>
                       )}
                       <div className="dm-message-content">
                         {message.content}

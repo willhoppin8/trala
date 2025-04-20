@@ -863,4 +863,38 @@
   .message-end-spacer {
     height: 80px;
   }
+}
+
+/* Versace glowing name effect */
+@keyframes versace-glow {
+  0% {
+    text-shadow: 0 0 4px #9b4dca, 0 0 8px #9b4dca;
+  }
+  50% {
+    text-shadow: 0 0 8px #9b4dca, 0 0 15px #9b4dca, 0 0 20px #9b4dca;
+  }
+  100% {
+    text-shadow: 0 0 4px #9b4dca, 0 0 8px #9b4dca;
+  }
+}
+
+.versace-name {
+  color: #d580ff !important;
+  font-weight: bold !important;
+  animation: versace-glow 2s infinite;
+  -webkit-text-fill-color: #d580ff;
+}
+
+/* Apply to conversation names */
+.conversation-name .versace-name {
+  padding: 0 4px;
+  border-radius: 4px;
+  background-color: rgba(155, 77, 202, 0.1);
+  display: inline-block;
+}
+
+/* Apply to message sender names */
+.message-sender.versace-name {
+  color: #d580ff !important;
+  text-shadow: 0 0 8px #9b4dca;
 } 
