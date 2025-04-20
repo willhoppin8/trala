@@ -28,25 +28,32 @@ const EasterThemeElements: React.FC<EasterThemeElementsProps> = ({ active }) => 
   // Don't render anything if not active
   if (!active) return null;
 
-  // Array of emojis to use for the floating elements - expanded list
+  // Array of emojis to use for the floating elements - expanded list with MORE FIRES AND BUNNIES
   const easterEmojis = [
-    '🐰', '🥚', '🐣', '🌷', '🌱', '🌿', '☘️', '🍃', '🌼', '🐥', '🐇', '🥕', '🌸', '🌻', '🍀',
-    '🐰', '🥚', '🐣', '🌿', '☘️', '🍃', '🌼', '🐥', '🐇', '🌱', '💨', '🔥', '🌳', '🧠', '💚',
-    '💐', '🌞', '🌈', '🌊', '🌴', '🌵', '🌱', '🌲', '🍄', '🐇', '🐣', '🥬', '🌺', '🌹', '🌿'
+    '🐰', '🐰', '🐰', '🔥', '🔥', '🔥', '🐇', '🐇', '🐇',  // Extra bunnies and fire
+    '🥚', '🐣', '🌷', '🌱', '🌿', '🔥', '🔥', '🐰', '🐰',  // More bunnies and fire
+    '☘️', '🍃', '🌼', '🐥', '🐇', '🥕', '🔥', '🔥', '🐰',  // More bunnies and fire
+    '🌸', '🌻', '🍀', '🔥', '🔥', '🐰', '🐰', '🐇', '🐇',  // Extra bunnies and fire
+    '🥚', '🐣', '🌿', '☘️', '🍃', '🔥', '🐰', '🔥', '🐰',  // More bunnies and fire
+    '🌼', '🐥', '🐇', '🌱', '💨', '🔥', '🔥', '🔥', '🐇',  // More fire and bunnies
+    '🌳', '🧠', '💚', '🔥', '🐰', '🔥', '🐰', '🔥', '🐰',  // Extra bunnies and fire
+    '💐', '🌞', '🌈', '🌊', '🔥', '🔥', '🐇', '🐇', '🔥',  // More fire and bunnies
+    '🌴', '🌵', '🌱', '🌲', '🔥', '🔥', '🐰', '🔥', '🐰',  // Extra bunnies and fire
+    '🍄', '🐇', '🐣', '🥬', '🐰', '🔥', '🐰', '🔥', '🐰'   // Extra bunnies and fire
   ];
 
-  // Create 45 elements (increased from 15)
+  // Create 80 elements (increased from 45)
   return (
     <div className="animated-elements">
-      {Array.from({ length: 45 }).map((_, index) => {
+      {Array.from({ length: 80 }).map((_, index) => {
         // Generate a random position
         const leftPos = Math.random() * 100;
         
-        // Generate faster animation durations (between 8-15s instead of 15-25s)
-        const duration = 8 + Math.random() * 7;
+        // Generate faster animation durations (between 5-12s)
+        const duration = 5 + Math.random() * 7;
         
-        // Generate shorter delays (0-3s instead of 0-5s)
-        const delay = Math.random() * 3;
+        // Generate shorter delays (0-2s)
+        const delay = Math.random() * 2;
         
         // Select a random emoji from the array
         const emoji = easterEmojis[Math.floor(Math.random() * easterEmojis.length)];
@@ -58,7 +65,7 @@ const EasterThemeElements: React.FC<EasterThemeElementsProps> = ({ active }) => 
               left: `${leftPos}%`,
               animationDuration: `${duration}s`,
               animationDelay: `${delay}s`,
-              fontSize: `${Math.random() * 16 + 16}px` // Random size between 16-32px
+              fontSize: `${Math.random() * 24 + 24}px` // Random size between 24-48px (BIGGER!)
             }}
           >
             {emoji}
@@ -69,4 +76,4 @@ const EasterThemeElements: React.FC<EasterThemeElementsProps> = ({ active }) => 
   );
 };
 
-export default EasterThemeElements; 
+export default EasterThemeElements;

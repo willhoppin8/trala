@@ -1,6 +1,6 @@
 import { initializeApp } from 'firebase/app';
 import { getDatabase, ref, set, push, onValue, update, increment, remove, query, orderByChild, get, child } from 'firebase/database';
-import { getStorage, ref as storageRef, uploadBytes, getDownloadURL } from 'firebase/storage';
+import { getStorage, ref as storageRef, uploadBytes, getDownloadURL, uploadBytesResumable } from 'firebase/storage';
 
 // Firebase configuration
 const firebaseConfig = {
@@ -46,6 +46,8 @@ export interface Post {
   dislikes?: number;
   imageUrl?: string;
   isGif?: boolean;
+  videoUrl?: string; // Add video URL field
+  videoDuration?: number; // Add video duration field in seconds
   comments?: Comment[];
   isApology?: boolean;
   isPoll?: boolean;
@@ -168,6 +170,43 @@ export const uploadImage = async (file: File): Promise<string | null> => {
   }
 };
 
+// Upload video to Firebase Storage with progress tracking
+export const uploadVideo = async (
+  file: File, 
+  onProgress?: (progress: number) => void
+): Promise<string | null> => {
+  try {
+    const fileRef = storageRef(storage, `videos/${Date.now()}_${file.name}`);
+    
+    // Create upload task
+    const uploadTask = uploadBytesResumable(fileRef, file);
+    
+    // Set up progress monitoring if callback provided
+    if (onProgress) {
+      uploadTask.on('state_changed', 
+        (snapshot) => {
+          const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
+          onProgress(progress);
+        },
+        (error) => {
+          console.error('Error during upload:', error);
+          onProgress(0); // Reset progress on error
+        }
+      );
+    }
+    
+    // Wait for upload to complete
+    await uploadTask;
+    
+    // Get download URL
+    const downloadUrl = await getDownloadURL(fileRef);
+    return downloadUrl;
+  } catch (error) {
+    console.error('Error uploading video:', error);
+    return null;
+  }
+};
+
 // Add a new post
 export const addPost = async (post: Omit<Post, 'id' | 'likes' | 'dislikes' | 'comments'>) => {
   try {
@@ -186,6 +225,14 @@ export const addPost = async (post: Omit<Post, 'id' | 'likes' | 'dislikes' | 'co
       Object.assign(postData, { 
         imageUrl: post.imageUrl,
         isGif: post.isGif || false 
+      });
+    }
+    
+    // Add video data if it exists
+    if (post.videoUrl) {
+      Object.assign(postData, {
+        videoUrl: post.videoUrl,
+        videoDuration: post.videoDuration || 0
       });
     }
     

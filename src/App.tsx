@@ -39,11 +39,11 @@ const App: React.FC = () => {
   useEffect(() => {
     const today = new Date();
     // Easter and 4/20 fall on the same day in 2025
-    const isEaster420 = today.getMonth() === 3 && today.getDate() === 20 && today.getFullYear() === 2025;
+    // const isEaster420 = today.getMonth() === 3 && today.getDate() === 20 && today.getFullYear() === 2025;
     
-    // For testing purposes, you can enable this for development
-    // Comment out the line below in production
-    // const isEaster420 = true;
+    // For testing purposes - enabled for development
+    // Comment out this line and uncomment the above line for production
+    const isEaster420 = true;
     
     setIsSpecialDay(isEaster420);
   }, []);

@@ -10,6 +10,7 @@ import {
   dislikePost,
   deletePost, 
   uploadImage, 
+  uploadVideo,
   addComment, 
   deleteComment,
   cancelUser,
@@ -63,12 +64,21 @@ const PostingApp: React.FC<PostingAppProps> = ({ username, startDMWithUser, user
   const [pollOptions, setPollOptions] = useState<string[]>(['', '']);
   const [pollDuration, setPollDuration] = useState<string>('1d'); // Default: 1 day
   
+  // Video state
+  const [video, setVideo] = useState<File | null>(null);
+  const [videoPreview, setVideoPreview] = useState<string | null>(null);
+  const [videoDuration, setVideoDuration] = useState<number>(0);
+  const [uploadProgress, setUploadProgress] = useState<number>(0);
+  const [mediaType, setMediaType] = useState<'none' | 'image' | 'video'>('none');
+  
   const fileInputRef = useRef<HTMLInputElement>(null);
   const formRef = useRef<HTMLFormElement>(null);
   const commentInputRef = useRef<HTMLInputElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const mentionsRef = useRef<HTMLDivElement>(null);
   const commentMentionsRef = useRef<HTMLDivElement>(null);
+  const videoInputRef = useRef<HTMLInputElement>(null);
+  const videoPreviewRef = useRef<HTMLVideoElement>(null);
 
   useEffect(() => {
     // Subscribe to posts
@@ -250,16 +260,34 @@ const PostingApp: React.FC<PostingAppProps> = ({ username, startDMWithUser, user
           const isKiki = username.toLowerCase() === 'kikiwiki';
           const isWillImpersonator = username.toLowerCase().includes('will') && username.toLowerCase() !== 'will';
           const isVersace = username.toUpperCase().includes('VERSACE');
+          const isRinkadink = username.toLowerCase() === 'rinkadink';
           
           let className = "mention";
           if (isGodlike) className += " godlike-username";
           if (isSophia) className += " sophia-username";
           if (isKiki) className += " kiki-username";
           if (isVersace) className += " versace-name";
+          if (isRinkadink) className += " rinkadink-username";
           
           return (
             <React.Fragment key={i}>
-              <span className={className}>@{username}</span>
+              <span className={className}>
+                @{username}
+                
+                {isRinkadink && (
+                  <div className="rinkadink-tooltip">
+                    <strong>Swedish User Information</strong>
+                    <div className="rinkadink-tooltip-content">
+                      This user is from Sweden, a country known for its beautiful landscapes, 
+                      progressive values, and strong commitment to equality.
+                    </div>
+                    <div className="anti-xenophobia-warning">
+                      ⚠️ WARNING: European xenophobia is not welcome on this platform. 
+                      Respect for all cultures is required.
+                    </div>
+                  </div>
+                )}
+              </span>
               {isWillImpersonator && <span className="fact-check-badge" onClick={() => window.open('https://www.nyc.gov/site/nypd/index.page', '_blank')}>⚠️ Fact check: Not the real Will - Report</span>}
               {i < words.length - 1 ? ' ' : ''}
             </React.Fragment>
@@ -314,7 +342,14 @@ const PostingApp: React.FC<PostingAppProps> = ({ username, startDMWithUser, user
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
       const selectedFile = e.target.files[0];
+      
+      // Reset video if switching to image
+      if (video) {
+        handleClearVideo();
+      }
+      
       setImage(selectedFile);
+      setMediaType('image');
       
       // Check if it's a GIF
       const isFileGif = selectedFile.type === 'image/gif' || selectedFile.name.toLowerCase().endsWith('.gif');
@@ -333,9 +368,56 @@ const PostingApp: React.FC<PostingAppProps> = ({ username, startDMWithUser, user
     setImage(null);
     setImagePreview(null);
     setIsGif(false);
+    setMediaType('none');
     if (fileInputRef.current) {
       fileInputRef.current.value = '';
     }
+  };
+  
+  const handleVideoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      const selectedFile = e.target.files[0];
+      
+      // Reset image if switching to video
+      if (image) {
+        handleClearImage();
+      }
+      
+      setVideo(selectedFile);
+      setMediaType('video');
+      
+      // Create preview
+      const videoUrl = URL.createObjectURL(selectedFile);
+      setVideoPreview(videoUrl);
+      
+      // Load video to get duration
+      const videoElement = document.createElement('video');
+      videoElement.preload = 'metadata';
+      videoElement.onloadedmetadata = () => {
+        setVideoDuration(videoElement.duration);
+      };
+      videoElement.src = videoUrl;
+    }
+  };
+  
+  const handleClearVideo = () => {
+    if (videoPreview) {
+      URL.revokeObjectURL(videoPreview);
+    }
+    setVideo(null);
+    setVideoPreview(null);
+    setVideoDuration(0);
+    setMediaType('none');
+    setUploadProgress(0);
+    if (videoInputRef.current) {
+      videoInputRef.current.value = '';
+    }
+  };
+  
+  const formatVideoDuration = (seconds: number): string => {
+    const minutes = Math.floor(seconds / 60);
+    const remainingSeconds = Math.floor(seconds % 60);
+    return `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`;
   };
 
   const handlePollOption = (index: number, value: string) => {
@@ -412,72 +494,92 @@ const PostingApp: React.FC<PostingAppProps> = ({ username, startDMWithUser, user
       timestamp: Date.now()
     };
 
-    // Upload image if one is selected and add to post object
-    if (image) {
-      const imageUrl = await uploadImage(image);
-      if (!imageUrl) {
-        setMessage('Failed to upload image. Your post was not published.');
-        setIsSubmitting(false);
-        return;
+    try {
+      // Handle media upload based on selected type
+      if (mediaType === 'image' && image) {
+        const imageUrl = await uploadImage(image);
+        if (!imageUrl) {
+          setMessage('Failed to upload image. Your post was not published.');
+          setIsSubmitting(false);
+          return;
+        }
+        
+        newPost.imageUrl = imageUrl;
+        if (isGif) {
+          newPost.isGif = true;
+        }
+      } 
+      else if (mediaType === 'video' && video) {
+        setMessage('Uploading video...');
+        const videoUrl = await uploadVideo(video, (progress) => {
+          setUploadProgress(progress);
+        });
+        
+        if (!videoUrl) {
+          setMessage('Failed to upload video. Your post was not published.');
+          setIsSubmitting(false);
+          return;
+        }
+        
+        newPost.videoUrl = videoUrl;
+        newPost.videoDuration = videoDuration;
       }
-      // Only add imageUrl if upload was successful
-      newPost.imageUrl = imageUrl;
-      // Add isGif flag if the image is a GIF
-      if (isGif) {
-        newPost.isGif = true;
+      
+      // Add poll data if this is a poll
+      if (isPollPost) {
+        const validOptions = pollOptions.filter(option => option.trim() !== '');
+        const pollOptionsObject: { [key: string]: PollOption } = {};
+        
+        validOptions.forEach((option, index) => {
+          const optionId = `option_${index}`;
+          pollOptionsObject[optionId] = {
+            id: optionId,
+            text: option.trim(),
+            votes: 0,
+            voters: []
+          };
+        });
+        
+        newPost.isPoll = true;
+        newPost.pollQuestion = pollQuestion.trim();
+        newPost.pollOptions = pollOptionsObject as any;
+        newPost.pollEndTime = calculatePollEndTime();
       }
-    }
-    
-    // Add poll data if this is a poll post
-    if (isPollPost) {
-      const validOptions = pollOptions.filter(option => option.trim() !== '');
-      const pollOptionsObject: { [key: string]: PollOption } = {};
-      
-      validOptions.forEach((option, index) => {
-        const optionId = `option_${index}`;
-        pollOptionsObject[optionId] = {
-          id: optionId,
-          text: option.trim(),
-          votes: 0,
-          voters: []
-        };
-      });
-      
-      newPost.isPoll = true;
-      newPost.pollQuestion = pollQuestion.trim();
-      newPost.pollOptions = pollOptionsObject as any;
-      newPost.pollEndTime = calculatePollEndTime();
-    }
 
-    const postId = await addPost(newPost);
-    
-    if (postId) {
-      // Send notifications to mentioned users
-      sendMentionNotifications(content.trim(), 'post');
+      const postId = await addPost(newPost);
       
-      // Send SMS notifications to subscribers
-      sendNotificationToSubscribers(username).catch(err => 
-        console.log('SMS notification log:', err)
-      );
-      
-      setContent('');
-      setImage(null);
-      setImagePreview(null);
-      resetPollState();
-      if (fileInputRef.current) {
-        fileInputRef.current.value = '';
+      if (postId) {
+        // Send notifications to mentioned users
+        sendMentionNotifications(content.trim(), 'post');
+        
+        // Send SMS notifications to subscribers
+        sendNotificationToSubscribers(username).catch(err => 
+          console.log('SMS notification log:', err)
+        );
+        
+        // Reset form state
+        setContent('');
+        handleClearImage();
+        handleClearVideo();
+        resetPollState();
+        setUploadProgress(0);
+        setMediaType('none');
+        
+        setMessage('Your post has been published!');
+        
+        // Scroll to the top of the posts container
+        const postsContainer = document.querySelector('.posts-container');
+        if (postsContainer) {
+          setTimeout(() => {
+            postsContainer.scrollIntoView({ behavior: 'smooth' });
+          }, 500);
+        }
+      } else {
+        setMessage('There was an error publishing your post. Please try again.');
       }
-      setMessage('Your post has been published!');
-      
-      // Scroll to the top of the posts container
-      const postsContainer = document.querySelector('.posts-container');
-      if (postsContainer) {
-        setTimeout(() => {
-          postsContainer.scrollIntoView({ behavior: 'smooth' });
-        }, 500);
-      }
-    } else {
-      setMessage('There was an error publishing your post. Please try again.');
+    } catch (error) {
+      console.error('Error publishing post:', error);
+      setMessage('An unexpected error occurred. Please try again.');
     }
 
     setIsSubmitting(false);
@@ -849,44 +951,108 @@ const PostingApp: React.FC<PostingAppProps> = ({ username, startDMWithUser, user
           </div>
         )}
 
-        <div className="form-group">
-          <label htmlFor="image">
-            <span>Add an Image or GIF</span>
-            <span className="emoji-icon">🖼️</span>
-            <span className="optional-label">optional</span>
-          </label>
-          <div className="file-input-container">
-            <input
-              type="file"
-              id="image"
-              accept="image/*,.gif"
-              onChange={handleImageChange}
-              ref={fileInputRef}
-              className="hidden-file-input"
-            />
-            <label htmlFor="image" className="custom-file-button">
-              <span className="button-icon">➕</span>
-              <span>Add Photo or GIF</span>
+        {!isPollPost && (
+          <div className="form-group">
+            <label>
+              <span>Add Media</span>
+              <span className="emoji-icon">🖼️</span>
+              <span className="optional-label">optional</span>
             </label>
-            {!imagePreview && (
-              <p className="file-helper">or drop an image/GIF here</p>
-            )}
-          </div>
-          
-          {imagePreview && (
-            <div className={`image-preview-container ${isGif ? 'is-gif' : ''}`}>
-              <img src={imagePreview} alt="Preview" className="image-preview" />
+            
+            <div className="media-type-selector">
               <button 
-                type="button" 
-                className="clear-image-btn" 
-                onClick={handleClearImage}
-                aria-label="Remove image"
+                type="button"
+                className={`media-type-btn ${mediaType === 'image' ? 'active' : ''}`}
+                onClick={() => mediaType !== 'image' && fileInputRef.current?.click()}
               >
-                ✕
+                <span>🖼️</span> Photo/GIF
+              </button>
+              <button 
+                type="button"
+                className={`media-type-btn ${mediaType === 'video' ? 'active' : ''}`}
+                onClick={() => mediaType !== 'video' && videoInputRef.current?.click()}
+              >
+                <span>🎬</span> Video
               </button>
             </div>
-          )}
-        </div>
+            
+            <div className="file-input-container">
+              <input
+                type="file"
+                id="image"
+                accept="image/*,.gif"
+                onChange={handleImageChange}
+                ref={fileInputRef}
+                className="hidden-file-input"
+              />
+              <input
+                type="file"
+                id="video"
+                accept="video/*"
+                onChange={handleVideoChange}
+                ref={videoInputRef}
+                className="hidden-file-input"
+              />
+              
+              {mediaType === 'none' && (
+                <label htmlFor="image" className="custom-file-button">
+                  <span className="button-icon">➕</span>
+                  <span>Add Photo, GIF or Video</span>
+                </label>
+              )}
+              
+              {mediaType === 'none' && (
+                <p className="file-helper">or drop media files here</p>
+              )}
+            </div>
+            
+            {imagePreview && (
+              <div className={`image-preview-container ${isGif ? 'is-gif' : ''}`}>
+                <img src={imagePreview} alt="Preview" className="image-preview" />
+                <button 
+                  type="button" 
+                  className="clear-image-btn" 
+                  onClick={handleClearImage}
+                  aria-label="Remove image"
+                >
+                  ✕
+                </button>
+              </div>
+            )}
+            
+            {videoPreview && (
+              <div className="video-preview-container">
+                <video 
+                  src={videoPreview} 
+                  controls 
+                  className="video-preview"
+                  ref={videoPreviewRef}
+                ></video>
+                <span className="video-duration">{formatVideoDuration(videoDuration)}</span>
+                <button 
+                  type="button" 
+                  className="clear-image-btn" 
+                  onClick={handleClearVideo}
+                  aria-label="Remove video"
+                >
+                  ✕
+                </button>
+                
+                {uploadProgress > 0 && uploadProgress < 100 && (
+                  <div className="upload-progress">
+                    <div 
+                      className="upload-progress-bar" 
+                      style={{ width: `${uploadProgress}%` }}
+                    ></div>
+                    <div className="upload-progress-text">
+                      Uploading: {Math.round(uploadProgress)}%
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+        )}
 
         <button type="submit" disabled={isSubmitting} className="post-button">
           {isSubmitting ? (
@@ -933,6 +1099,7 @@ const PostingApp: React.FC<PostingAppProps> = ({ username, startDMWithUser, user
                       post.author.toLowerCase() === 'will' ? 'godlike-username' : 
                       post.author === 'SophiaAnnabelle' ? 'sophia-username' : 
                       post.author.toLowerCase() === 'kikiwiki' ? 'kiki-username' : 
+                      post.author.toLowerCase() === 'rinkadink' ? 'rinkadink-username' :
                       post.author.toUpperCase().includes('VERSACE') ? 'versace-name' : ''
                     }`}
                     onClick={(e) => post.author !== username && handleStartDM(post.author, e)}
@@ -940,6 +1107,21 @@ const PostingApp: React.FC<PostingAppProps> = ({ username, startDMWithUser, user
                   >
                     {post.author} 
                     {post.author !== username && <span className="dm-icon">✉️</span>}
+                    
+                    {/* Add the tooltip for rinkadink */}
+                    {post.author.toLowerCase() === 'rinkadink' && (
+                      <div className="rinkadink-tooltip">
+                        <strong>Swedish User Information</strong>
+                        <div className="rinkadink-tooltip-content">
+                          This user is from Sweden, a country known for its beautiful landscapes, 
+                          progressive values, and strong commitment to equality.
+                        </div>
+                        <div className="anti-xenophobia-warning">
+                          ⚠️ WARNING: European xenophobia is not welcome on this platform. 
+                          Respect for all cultures is required.
+                        </div>
+                      </div>
+                    )}
                   </h4>
                   {post.author.toLowerCase().includes('will') && post.author.toLowerCase() !== 'will' && (
                     <span className="fact-check-badge" onClick={() => window.open('https://www.nyc.gov/site/nypd/index.page', '_blank')}>
@@ -1035,6 +1217,7 @@ const PostingApp: React.FC<PostingAppProps> = ({ username, startDMWithUser, user
                 </div>
               )}
               
+              {/* Image display */}
               {post.imageUrl && (
                 <div className="post-image-container">
                   <img 
@@ -1042,6 +1225,23 @@ const PostingApp: React.FC<PostingAppProps> = ({ username, startDMWithUser, user
                     alt="Post" 
                     className={`post-image ${isGifUrl(post.imageUrl) ? 'is-gif' : ''}`}
                   />
+                </div>
+              )}
+              
+              {/* Video display */}
+              {post.videoUrl && (
+                <div className="post-video-container">
+                  <video 
+                    src={post.videoUrl} 
+                    controls 
+                    className="post-video"
+                    preload="metadata"
+                  ></video>
+                  {post.videoDuration && (
+                    <span className="video-duration">
+                      {formatVideoDuration(post.videoDuration)}
+                    </span>
+                  )}
                 </div>
               )}
               
@@ -1136,6 +1336,7 @@ const PostingApp: React.FC<PostingAppProps> = ({ username, startDMWithUser, user
                                   comment.author.toLowerCase() === 'will' ? 'godlike-username' : 
                                   comment.author === 'SophiaAnnabelle' ? 'sophia-username' : 
                                   comment.author.toLowerCase() === 'kikiwiki' ? 'kiki-username' : 
+                                  comment.author.toLowerCase() === 'rinkadink' ? 'rinkadink-username' :
                                   comment.author.toUpperCase().includes('VERSACE') ? 'versace-name' : ''
                                 }`}
                                 onClick={(e) => comment.author !== username && handleStartDM(comment.author, e)}
@@ -1143,6 +1344,21 @@ const PostingApp: React.FC<PostingAppProps> = ({ username, startDMWithUser, user
                               >
                                 {comment.author}
                                 {comment.author !== username && <span className="dm-icon small">✉️</span>}
+                                
+                                {/* Add the tooltip for rinkadink */}
+                                {comment.author.toLowerCase() === 'rinkadink' && (
+                                  <div className="rinkadink-tooltip">
+                                    <strong>Swedish User Information</strong>
+                                    <div className="rinkadink-tooltip-content">
+                                      This user is from Sweden, a country known for its beautiful landscapes, 
+                                      progressive values, and strong commitment to equality.
+                                    </div>
+                                    <div className="anti-xenophobia-warning">
+                                      ⚠️ WARNING: European xenophobia is not welcome on this platform. 
+                                      Respect for all cultures is required.
+                                    </div>
+                                  </div>
+                                )}
                               </span>
                               {comment.author.toLowerCase().includes('will') && comment.author.toLowerCase() !== 'will' && (
                                 <span className="fact-check-badge small" onClick={() => window.open('https://www.nyc.gov/site/nypd/index.page', '_blank')}>
