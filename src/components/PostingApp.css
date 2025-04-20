@@ -1521,4 +1521,63 @@ h3 .emoji-icon {
   vertical-align: middle;
   display: inline-flex;
   font-size: 0.65rem;
+}
+
+/* Versace glowing name effect */
+@keyframes versace-glow {
+  0% {
+    text-shadow: 0 0 4px #9b4dca, 0 0 8px #9b4dca;
+  }
+  50% {
+    text-shadow: 0 0 8px #9b4dca, 0 0 15px #9b4dca, 0 0 20px #9b4dca;
+  }
+  100% {
+    text-shadow: 0 0 4px #9b4dca, 0 0 8px #9b4dca;
+  }
+}
+
+.versace-name {
+  color: #d580ff !important;
+  font-weight: bold !important;
+  animation: versace-glow 2s infinite;
+  -webkit-text-fill-color: #d580ff;
+}
+
+/* Special styling for posts */
+.post-author.versace-name {
+  display: inline-block;
+  padding: 0 6px;
+  border-radius: 4px;
+  background-color: rgba(155, 77, 202, 0.1);
+}
+
+/* Special styling for comments */
+.comment-author.versace-name {
+  display: inline-block;
+  padding: 0 6px;
+  border-radius: 4px;
+  background-color: rgba(155, 77, 202, 0.1);
+}
+
+/* Special styling for mentions */
+.mention.versace-name {
+  background-color: rgba(155, 77, 202, 0.15);
+  border: 1px solid rgba(155, 77, 202, 0.3);
+}
+
+.fact-check-badge {
+  display: inline-block;
+  margin-left: 8px;
+  padding: 3px 8px;
+  background-color: rgba(255, 59, 48, 0.1);
+  border: 1px solid rgba(255, 59, 48, 0.3);
+  border-radius: 4px;
+  font-size: 0.75rem;
+  color: #ff3b30;
+  cursor: pointer;
+  transition: var(--transition);
+}
+
+.fact-check-badge:hover {
+  background-color: rgba(255, 59, 48, 0.2);
 } 
