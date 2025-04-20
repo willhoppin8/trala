@@ -6,6 +6,7 @@ import DirectMessages from './components/DirectMessages';
 import ApologyScreen from './components/ApologyScreen';
 import UserProfile from './components/UserProfile';
 import ProfilePicture from './components/ProfilePicture';
+import EasterThemeElements from './components/EasterThemeElements';
 import {
   getUserStatus,
   User,
@@ -31,6 +32,21 @@ const App: React.FC = () => {
     group: number;
   }
   const [unreadCount, setUnreadCount] = useState<UnreadCounts>({ direct: 0, group: 0 });
+  
+  // Special theme for Easter/420 (2025)
+  const [isSpecialDay, setIsSpecialDay] = useState(false);
+  
+  useEffect(() => {
+    const today = new Date();
+    // Easter and 4/20 fall on the same day in 2025
+    const isEaster420 = today.getMonth() === 3 && today.getDate() === 20 && today.getFullYear() === 2025;
+    
+    // For testing purposes, you can enable this for development
+    // Comment out the line below in production
+    // const isEaster420 = true;
+    
+    setIsSpecialDay(isEaster420);
+  }, []);
   
   useEffect(() => {
     // Check if user is logged in from local storage
@@ -147,6 +163,9 @@ const App: React.FC = () => {
   
   return (
     <div className={`app ${isInMobileChatView ? 'in-mobile-chat' : ''}`}>
+      {/* Add the Easter Theme Elements */}
+      <EasterThemeElements active={isSpecialDay} />
+      
       {/* Only hide header when in mobile chat view */}
       {!isInMobileChatView && (
         <header className="app-header">
@@ -177,30 +196,32 @@ const App: React.FC = () => {
             />
           ) : (
             <div className={`app-content ${isInMobileChatView ? 'in-mobile-chat' : ''}`}>
-              {/* Show desktop tabs always, but only show bottom nav when not in chat view */}
-              <div className="app-tabs">
-                <button 
-                  className={`app-tab ${activeTab === 'posts' ? 'active' : ''}`}
-                  onClick={() => setActiveTab('posts')}
-                >
-                  📝 Posts
-                </button>
-                <button 
-                  className={`app-tab ${activeTab === 'messages' ? 'active' : ''}`}
-                  onClick={() => setActiveTab('messages')}
-                >
-                  💬 Messages
-                </button>
-                <button 
-                  className={`app-tab ${activeTab === 'profile' ? 'active' : ''}`}
-                  onClick={() => setActiveTab('profile')}
-                >
-                  👤 Profile
-                </button>
-              </div>
+              {/* Only show desktop tabs when not on mobile */}
+              {!isMobile && (
+                <div className="app-tabs">
+                  <button 
+                    className={`app-tab ${activeTab === 'posts' ? 'active' : ''}`}
+                    onClick={() => setActiveTab('posts')}
+                  >
+                    📝 Posts
+                  </button>
+                  <button 
+                    className={`app-tab ${activeTab === 'messages' ? 'active' : ''}`}
+                    onClick={() => setActiveTab('messages')}
+                  >
+                    💬 Messages
+                  </button>
+                  <button 
+                    className={`app-tab ${activeTab === 'profile' ? 'active' : ''}`}
+                    onClick={() => setActiveTab('profile')}
+                  >
+                    👤 Profile
+                  </button>
+                </div>
+              )}
               
               {/* Bottom Navigation for Mobile - show when not in active chat view */}
-              {!isInMobileChatView && (
+              {isMobile && !isInMobileChatView && (
                 <div className="bottom-nav">
                   <div 
                     className={`bottom-nav-item ${activeTab === 'posts' ? 'active' : ''}`}

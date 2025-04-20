@@ -1580,4 +1580,327 @@ h3 .emoji-icon {
 
 .fact-check-badge:hover {
   background-color: rgba(255, 59, 48, 0.2);
+}
+
+/* Easter/420 Theme - April 20, 2025 */
+body.easter-420-theme {
+  --primary-color: #7eb35b; /* Weed green */
+  --primary-gradient: linear-gradient(to right, #7eb35b, #a1ce89);
+  --secondary-color: #f3c677; /* Easter yellow */
+  --card-background: #2a2b25; /* Dark green tint */
+  --accent-color: #f37735; /* Orange */
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100' height='100' viewBox='0 0 100 100'%3E%3Cpath fill='%237eb35b' fill-opacity='0.08' d='M11 18c3.866 0 7-3.134 7-7s-3.134-7-7-7-7 3.134-7 7 3.134 7 7 7zm48 25c3.866 0 7-3.134 7-7s-3.134-7-7-7-7 3.134-7 7 3.134 7 7 7zm-43-7c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zm63 31c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zM34 90c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zm56-76c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zM12 86c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm28-65c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm23-11c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm-6 60c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm29 22c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zM32 63c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm57-13c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm-9-21c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM60 91c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM35 41c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM12 60c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2z'%3E%3C/path%3E%3C/svg%3E");
+}
+
+body.easter-420-theme .app-description::before {
+  content: "🐰 Easter meets 4/20 - Happy Blazing Bunny Day! 🌿";
+  display: block;
+  margin-bottom: 10px;
+  font-weight: bold;
+  color: #f3c677;
+}
+
+body.easter-420-theme .post-form::before,
+body.easter-420-theme .posts-container::before {
+  background: linear-gradient(to right, #7eb35b, #a1ce89, #f3c677, #f8e9c1);
+}
+
+body.easter-420-theme .custom-file-button {
+  background-color: #7eb35b;
+}
+
+body.easter-420-theme .comment-submit {
+  background-color: #7eb35b;
+}
+
+body.easter-420-theme .post {
+  position: relative;
+}
+
+body.easter-420-theme .post::after {
+  content: "";
+  position: absolute;
+  bottom: 15px;
+  right: 15px;
+  width: 30px;
+  height: 30px;
+  background-repeat: no-repeat;
+  background-size: contain;
+  opacity: 0.4;
+  pointer-events: none;
+}
+
+body.easter-420-theme .post:nth-child(odd)::after {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23f3c677'%3E%3Cpath d='M12,1.5A4.5,4.5,0,0,1,16.5,6,7.5,7.5,0,0,1,9,13.5c0,.17,0,.33,0,.5a7,7,0,0,1,14,0V15H22v-.5a8,8,0,0,0-8-8,8.5,8.5,0,0,0,8.5-8.5H21A7.5,7.5,0,0,1,13.5,5.5H13A5.5,5.5,0,1,0,7.5,11H7a6.5,6.5,0,0,1,13,0V12H19v-1A5,5,0,0,0,9,11c0,.33,0,.67,0,1a6,6,0,0,1-6-6H1.5A7.5,7.5,0,0,0,9,13.5c0-.17,0-.33,0-.5a5.5,5.5,0,0,1,11,0V14h1v-1a6.5,6.5,0,0,0-13,0c0,.33,0,.67,0,1a7.5,7.5,0,0,1-7.5-7.5H0A8.5,8.5,0,0,0,8.5,15H9a7,7,0,0,1,7-7,4,4,0,0,0,4-4A5.5,5.5,0,0,0,14.5,4H14a4.5,4.5,0,0,1-9,0Z'/%3E%3C/svg%3E");
+}
+
+body.easter-420-theme .post:nth-child(even)::after {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32' fill='%237eb35b'%3E%3Cpath d='M16,8c0,0-3-1-8,3S0,16,0,16s1,2,3,1c0,0,8-5,13-2l0,0l0,0c5-3,13,2,13,2c2,1,3-1,3-1s-3-2-8-5S16,8,16,8z M16,5L16,5c-2-2-9,1-9,1s4-5,9-4c5-1,9,4,9,4S18,3,16,5z M16,11L16,11c-4-3-10-1-10-1s5-3,10-2c5-1,10,2,10,2S20,8,16,11z'/%3E%3C/svg%3E");
+}
+
+body.easter-420-theme .mention {
+  color: #f37735;
+}
+
+body.easter-420-theme .loader {
+  border-top-color: #7eb35b;
+}
+
+body.easter-420-theme .author-info::before {
+  content: "🥚";
+  margin-right: 6px;
+  animation: bounce 2s infinite;
+}
+
+body.easter-420-theme .poll-indicator {
+  background-color: #f37735;
+}
+
+body.easter-420-theme .post-author,
+body.easter-420-theme .comment-author {
+  position: relative;
+}
+
+/* Floating leaves animation */
+@keyframes float-leaves {
+  0% { transform: translateY(0) rotate(0deg); opacity: 1; }
+  100% { transform: translateY(-100px) rotate(360deg); opacity: 0; }
+}
+
+body.easter-420-theme::before {
+  content: "";
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: -1;
+  pointer-events: none;
+}
+
+/* Add Easter egg emojis that float up occasionally */
+body.easter-420-theme .posting-app::after {
+  content: "";
+  position: fixed;
+  bottom: -20px;
+  animation: float-leaves 15s linear infinite;
+  opacity: 0;
+  z-index: -1;
+}
+
+body.easter-420-theme .post-button,
+body.easter-420-theme .like-button,
+body.easter-420-theme .comment-button {
+  position: relative;
+  overflow: hidden;
+}
+
+body.easter-420-theme .post-button::before {
+  content: "🔥 ";
+}
+
+body.easter-420-theme .emoji-icon {
+  animation: bounce 2s infinite;
+}
+
+/* Create Easter-egg shaped like/comment buttons */
+body.easter-420-theme .like-button {
+  border-radius: 50% 50% 50% 50% / 60% 60% 40% 40%;
+  background-color: rgba(243, 198, 119, 0.1);
+  border-color: rgba(243, 198, 119, 0.3);
+}
+
+body.easter-420-theme .comment-button {
+  border-radius: 50% 50% 50% 50% / 60% 60% 40% 40%;
+  background-color: rgba(126, 179, 91, 0.1);
+  border-color: rgba(126, 179, 91, 0.3);
+}
+
+body.easter-420-theme .custom-file-button::before {
+  content: "🌿";
+  margin-right: 8px;
+}
+
+/* Add smoke effects to inputs */
+@keyframes smoke {
+  0% { opacity: 0; transform: translateY(0); }
+  25% { opacity: 0.4; }
+  50% { opacity: 0.1; transform: translateY(-10px) translateX(5px); }
+  75% { opacity: 0.3; }
+  100% { opacity: 0; transform: translateY(-20px) translateX(-5px); }
+}
+
+body.easter-420-theme input:focus::after,
+body.easter-420-theme textarea:focus::after {
+  content: "~";
+  position: absolute;
+  top: 0;
+  right: 10px;
+  color: rgba(126, 179, 91, 0.5);
+  animation: smoke 2s infinite;
+}
+
+/* Replace heart icon with Easter egg and leaf */
+body.easter-420-theme .heart-icon::before {
+  content: "🥚";
+}
+
+body.easter-420-theme .app-footer .heart-icon::before {
+  content: "🍃";
+}
+
+body.easter-420-theme .post::before {
+  background: linear-gradient(to right, #7eb35b, #a1ce89);
+}
+
+body.easter-420-theme .post:hover {
+  box-shadow: 0 8px 15px rgba(126, 179, 91, 0.2);
+}
+
+/* Animated Easter eggs and 420 leaves */
+body.easter-420-theme .animated-elements {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: 1px;
+  pointer-events: none;
+  z-index: 10;
+}
+
+body.easter-420-theme .animated-elements span {
+  position: absolute;
+  bottom: -20px;
+  display: block;
+  text-align: center;
+  animation-name: float-up;
+  animation-timing-function: ease-in-out;
+  animation-iteration-count: infinite;
+  font-size: 24px;
+}
+
+@keyframes float-up {
+  0% {
+    opacity: 0;
+    transform: translateY(0) rotate(0deg);
+  }
+  10% {
+    opacity: 0.7;
+  }
+  90% {
+    opacity: 0.2;
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(-100vh) rotate(360deg);
+  }
+}
+
+/* Generate 15 elements with different positions, delays and durations */
+body.easter-420-theme .animated-elements span:nth-child(1) {
+  left: 5%;
+  animation-duration: 15s;
+  animation-delay: 1s;
+}
+body.easter-420-theme .animated-elements span:nth-child(2) {
+  left: 15%;
+  animation-duration: 17s;
+  animation-delay: 3s;
+}
+body.easter-420-theme .animated-elements span:nth-child(3) {
+  left: 25%;
+  animation-duration: 16s;
+  animation-delay: 5s;
+}
+body.easter-420-theme .animated-elements span:nth-child(4) {
+  left: 35%;
+  animation-duration: 18s;
+  animation-delay: 2s;
+}
+body.easter-420-theme .animated-elements span:nth-child(5) {
+  left: 45%;
+  animation-duration: 14s;
+  animation-delay: 4s;
+}
+body.easter-420-theme .animated-elements span:nth-child(6) {
+  left: 55%;
+  animation-duration: 15s;
+  animation-delay: 6s;
+}
+body.easter-420-theme .animated-elements span:nth-child(7) {
+  left: 65%;
+  animation-duration: 16s;
+  animation-delay: 7s;
+}
+body.easter-420-theme .animated-elements span:nth-child(8) {
+  left: 75%;
+  animation-duration: 17s;
+  animation-delay: 2s;
+}
+body.easter-420-theme .animated-elements span:nth-child(9) {
+  left: 85%;
+  animation-duration: 18s;
+  animation-delay: 1s;
+}
+body.easter-420-theme .animated-elements span:nth-child(10) {
+  left: 95%;
+  animation-duration: 19s;
+  animation-delay: 3s;
+}
+body.easter-420-theme .animated-elements span:nth-child(11) {
+  left: 10%;
+  animation-duration: 20s;
+  animation-delay: 5s;
+}
+body.easter-420-theme .animated-elements span:nth-child(12) {
+  left: 20%;
+  animation-duration: 22s;
+  animation-delay: 4s;
+}
+body.easter-420-theme .animated-elements span:nth-child(13) {
+  left: 30%;
+  animation-duration: 15s;
+  animation-delay: 2s;
+}
+body.easter-420-theme .animated-elements span:nth-child(14) {
+  left: 70%;
+  animation-duration: 18s;
+  animation-delay: 6s;
+}
+body.easter-420-theme .animated-elements span:nth-child(15) {
+  left: 80%;
+  animation-duration: 16s;
+  animation-delay: 5s;
+}
+
+/* Add a custom bounce animation for elements */
+@keyframes bounce {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
+/* Special effects when liking a post */
+body.easter-420-theme .like-button.liked::after {
+  content: "🐣";
+  position: absolute;
+  font-size: 20px;
+  top: -20px;
+  left: 50%;
+  transform: translateX(-50%);
+  animation: float-up 2s ease-out forwards;
+}
+
+/* Special effects when disliking a post */
+body.easter-420-theme .dislike-button.disliked::after {
+  content: "🥀";
+  position: absolute;
+  font-size: 20px;
+  top: -20px;
+  left: 50%;
+  transform: translateX(-50%);
+  animation: float-up 2s ease-out forwards;
 } 
