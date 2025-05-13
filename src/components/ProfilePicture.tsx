@@ -18,11 +18,13 @@ const ProfilePicture: React.FC<ProfilePictureProps> = ({
 }) => {
   // Generate initials from username
   const getInitials = (name: string): string => {
+    if (typeof name !== 'string' || name.length === 0) return '?'; // Return a placeholder if name is not valid
     return name.charAt(0).toUpperCase();
   };
 
   // Determine if name gets special styling
   const getSpecialClass = (name: string): string => {
+    if (typeof name !== 'string') return ''; // Return empty if name is not a string
     const lowerName = name.toLowerCase();
     if (lowerName === 'will') return 'godlike-profile';
     if (name === 'SophiaAnnabelle') return 'sophia-profile';

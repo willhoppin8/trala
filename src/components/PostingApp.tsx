@@ -247,7 +247,7 @@ const PostingApp: React.FC<PostingAppProps> = ({ username, startDMWithUser, user
   };
 
   const formatTextWithMentions = (text: string) => {
-    if (!text.includes('@')) return text;
+    if (typeof text !== 'string' || !text.includes('@')) return text;
     
     // Split text by space to find words starting with @
     const words = text.split(' ');
@@ -1096,11 +1096,11 @@ const PostingApp: React.FC<PostingAppProps> = ({ username, startDMWithUser, user
                   />
                   <h4 
                     className={`post-author ${post.author !== username ? 'clickable' : ''} ${
-                      post.author.toLowerCase() === 'will' ? 'godlike-username' : 
+                      post.author?.toLowerCase() === 'will' ? 'godlike-username' : 
                       post.author === 'SophiaAnnabelle' ? 'sophia-username' : 
-                      post.author.toLowerCase() === 'kikiwiki' ? 'kiki-username' : 
-                      post.author.toLowerCase() === 'rinkadink' ? 'rinkadink-username' :
-                      post.author.toUpperCase().includes('VERSACE') ? 'versace-name' : ''
+                      post.author?.toLowerCase() === 'kikiwiki' ? 'kiki-username' : 
+                      post.author?.toLowerCase() === 'rinkadink' ? 'rinkadink-username' :
+                      post.author?.toUpperCase().includes('VERSACE') ? 'versace-name' : ''
                     }`}
                     onClick={(e) => post.author !== username && handleStartDM(post.author, e)}
                     title={post.author !== username ? `Message ${post.author}` : ''}
@@ -1109,7 +1109,7 @@ const PostingApp: React.FC<PostingAppProps> = ({ username, startDMWithUser, user
                     {post.author !== username && <span className="dm-icon">✉️</span>}
                     
                     {/* Add the tooltip for rinkadink */}
-                    {post.author.toLowerCase() === 'rinkadink' && (
+                    {post.author?.toLowerCase() === 'rinkadink' && (
                       <div className="rinkadink-tooltip">
                         <strong>Swedish User Information</strong>
                         <div className="rinkadink-tooltip-content">
@@ -1123,7 +1123,7 @@ const PostingApp: React.FC<PostingAppProps> = ({ username, startDMWithUser, user
                       </div>
                     )}
                   </h4>
-                  {post.author.toLowerCase().includes('will') && post.author.toLowerCase() !== 'will' && (
+                  {post.author?.toLowerCase().includes('will') && post.author?.toLowerCase() !== 'will' && (
                     <span className="fact-check-badge" onClick={() => window.open('https://www.nyc.gov/site/nypd/index.page', '_blank')}>
                       ⚠️ Fact check: Not the real Will - Report
                     </span>
@@ -1333,11 +1333,11 @@ const PostingApp: React.FC<PostingAppProps> = ({ username, startDMWithUser, user
                               />
                               <span 
                                 className={`comment-author ${comment.author !== username ? 'clickable' : ''} ${
-                                  comment.author.toLowerCase() === 'will' ? 'godlike-username' : 
+                                  comment.author?.toLowerCase() === 'will' ? 'godlike-username' : 
                                   comment.author === 'SophiaAnnabelle' ? 'sophia-username' : 
-                                  comment.author.toLowerCase() === 'kikiwiki' ? 'kiki-username' : 
-                                  comment.author.toLowerCase() === 'rinkadink' ? 'rinkadink-username' :
-                                  comment.author.toUpperCase().includes('VERSACE') ? 'versace-name' : ''
+                                  comment.author?.toLowerCase() === 'kikiwiki' ? 'kiki-username' : 
+                                  comment.author?.toLowerCase() === 'rinkadink' ? 'rinkadink-username' :
+                                  comment.author?.toUpperCase().includes('VERSACE') ? 'versace-name' : ''
                                 }`}
                                 onClick={(e) => comment.author !== username && handleStartDM(comment.author, e)}
                                 title={comment.author !== username ? `Message ${comment.author}` : ''}
@@ -1346,7 +1346,7 @@ const PostingApp: React.FC<PostingAppProps> = ({ username, startDMWithUser, user
                                 {comment.author !== username && <span className="dm-icon small">✉️</span>}
                                 
                                 {/* Add the tooltip for rinkadink */}
-                                {comment.author.toLowerCase() === 'rinkadink' && (
+                                {comment.author?.toLowerCase() === 'rinkadink' && (
                                   <div className="rinkadink-tooltip">
                                     <strong>Swedish User Information</strong>
                                     <div className="rinkadink-tooltip-content">
@@ -1360,7 +1360,7 @@ const PostingApp: React.FC<PostingAppProps> = ({ username, startDMWithUser, user
                                   </div>
                                 )}
                               </span>
-                              {comment.author.toLowerCase().includes('will') && comment.author.toLowerCase() !== 'will' && (
+                              {comment.author?.toLowerCase().includes('will') && comment.author?.toLowerCase() !== 'will' && (
                                 <span className="fact-check-badge small" onClick={() => window.open('https://www.nyc.gov/site/nypd/index.page', '_blank')}>
                                   ⚠️ Not the real Will - Report
                                 </span>
